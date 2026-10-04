@@ -1,0 +1,7 @@
+/backups/
+__pycache__/
+*.py[cod]
+/cookBook-journal
+/cookBook-wal
+/cookBook-shm
+.~lock.*#
