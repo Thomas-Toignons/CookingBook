@@ -1,8 +1,7 @@
 ﻿ingredient;unite;quantite_necessaire;stock_quantite;quantite_a_acheter;cout_estime;cout_reel
-Carotte;g;700.0;0.0;700.0;1.05;1.39
-Curry;g;18.0;0.0;18.0;0.45;0
-Fromage blanc nature;g;50.0;0.0;50.0;0.11;0.09
+Carotte;g;550.0;0.0;550.0;0.83;1.09
+Curry;g;14.0;0.0;14.0;0.35;0
 Légumes mélangés surgelés;g;400.0;0.0;400.0;0.92;0
-Poulet;g;360.0;0.0;360.0;2.84;4.23
+Poulet;g;240.0;0.0;240.0;1.9;2.82
 Skir;g;1250.0;0.0;1250.0;0;0
 Tomates concassées;g;1400.0;800.0;600.0;1.28;1.19
