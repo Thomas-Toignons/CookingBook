@@ -1,0 +1,8 @@
+# Sept dîners, du lundi au dimanche. Les présences ne guident jamais le tirage.
+[menu]
+nombre_non_vegetariens = 2
+recettes_distinctes = true
+dejeuner_identique_au_diner_precedent = true
+
+[selection]
+recettes_actives_uniquement = true

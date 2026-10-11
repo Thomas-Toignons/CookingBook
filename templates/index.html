@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CookingBook · Menu et courses</title>
+  <style>
+    :root { color-scheme: light; --fond:#f7f5ef; --papier:#fff; --texte:#223b31; --vert:#315c46; --bord:#dedfd5; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--fond); color:var(--texte); font:17px/1.5 system-ui,sans-serif; }
+    main { max-width:1120px; margin:auto; padding:32px 20px 60px; }
+    header { padding-bottom:28px; border-bottom:1px solid var(--bord); }
+    .signature { font-size:13px; letter-spacing:.15em; text-transform:uppercase; font-weight:700; }
+    h1 { font:clamp(32px,6vw,54px)/1.15 Georgia,serif; margin:14px 0; }
+    h2 { font:30px/1.2 Georgia,serif; margin:0 0 16px; }
+    h3 { margin:0 0 14px; font-size:18px; } h3 small { color:#617267; font-size:14px; font-weight:400; }
+    p { margin:8px 0; } .secondaire { color:#617267; font-size:14px; }
+    nav,.actions { display:flex; gap:10px; flex-wrap:wrap; margin-top:20px; }
+    a,button { color:var(--vert); } nav a,.actions a,button { border:1px solid var(--bord); background:var(--papier); padding:10px 16px; border-radius:8px; text-decoration:none; font:inherit; cursor:pointer; }
+    a:focus-visible,button:focus-visible,input:focus-visible { outline:3px solid #bd791c; outline-offset:3px; }
+    section { margin-top:34px; } .entete { display:flex; justify-content:space-between; align-items:baseline; gap:12px; flex-wrap:wrap; }
+    .courses { list-style:none; padding:0; margin:18px 0; border:1px solid var(--bord); border-radius:12px; background:var(--papier); overflow:hidden; }
+    .courses li+li { border-top:1px solid var(--bord); }
+    .courses label { display:flex; gap:12px; align-items:center; padding:16px; cursor:pointer; }
+    input { width:22px; height:22px; flex-shrink:0; accent-color:var(--vert); }
+    .ingredient { flex:1; } .quantite { font-variant-numeric:tabular-nums; font-weight:650; white-space:nowrap; }
+    input:checked~span { text-decoration:line-through; opacity:.45; }
+    .vide { padding:20px; } .budget { display:flex; gap:24px; flex-wrap:wrap; }
+    .grille { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:14px; }
+    .jour { background:var(--papier); border:1px solid var(--bord); padding:20px; border-radius:12px; }
+    .repas+.repas { border-top:1px solid var(--bord); margin-top:15px; padding-top:15px; }
+    .label { font-size:12px; text-transform:uppercase; letter-spacing:.1em; color:#617267; }
+    .badge,.absent { display:inline-block; font-size:12px; padding:3px 8px; border-radius:5px; margin:4px 4px 0 0; }
+    .badge { background:#f5ead8; color:#805214; } .absent { background:#eef0eb; color:#617267; }
+    footer { margin-top:36px; border-top:1px solid var(--bord); padding-top:16px; }
+    @media(max-width:480px) { main { padding:24px 14px; } .courses label { padding:14px 10px; gap:8px; } }
+    @media print { body { background:white; font-size:12px; } main { max-width:none; padding:0; } nav,.actions,footer { display:none; } h1 { font-size:28px; } .jour,.courses li { break-inside:avoid; } .grille { grid-template-columns:repeat(3,1fr); } }
+  </style>
+</head>
+<body data-semaine="$semaine">
+<main>
+  <header>
+    <div class="signature">CookingBook · À table cette semaine</div>
+    <h1>Le menu est prêt.<br>Place aux courses.</h1>
+    <p>Semaine du $periode</p>
+    <p class="secondaire">Mise à jour le $actualisation · Les courses suivent les présences et le stock renseignés.</p>
+    <nav aria-label="Navigation"><a href="#courses">Liste de courses</a><a href="#menu">Menu de la semaine</a></nav>
+  </header>
+  <section id="courses" aria-labelledby="titre-courses">
+    <div class="entete"><h2 id="titre-courses">Dans le panier</h2><span id="progression" aria-live="polite">$nombre_articles ingrédients</span></div>
+    <p class="secondaire">Coche les achats au fur et à mesure. Les coches restent sur cet appareil, pour cette semaine.</p>
+    <ul class="courses">$courses</ul>
+    <div class="budget"><span>Coût estimé : <strong>$cout_estime €</strong></span><span>Selon les prix magasin renseignés : <strong>$cout_magasin €</strong></span></div>
+    <p class="secondaire">Les totaux utilisent les tarifs disponibles dans la base ; les prix manquants comptent pour zéro.</p>
+    <div class="actions"><a href="courses.csv" download>Télécharger le CSV</a><button id="imprimer" type="button">Imprimer</button><button id="reinitialiser" type="button">Décocher les achats</button></div>
+  </section>
+  <section id="menu" aria-labelledby="titre-menu">
+    <h2 id="titre-menu">Cette semaine à table</h2>
+    <p class="secondaire">Le dîner devient le déjeuner du lendemain. Le lundi midi reprend le dimanche de la semaine précédente.</p>
+    <div class="grille">$menu</div>
+  </section>
+  <footer class="secondaire">CookingBook · Une liste commune, des coches propres à chaque appareil.</footer>
+</main>
+<script>
+  const cle = 'cookingbook-achats-' + document.body.dataset.semaine;
+  const cases = Array.from(document.querySelectorAll('input[data-ingredient]'));
+  let achats = new Set();
+  try { achats = new Set(JSON.parse(localStorage.getItem(cle) || '[]')); } catch (_) {}
+  function actualiser() {
+    document.getElementById('progression').textContent = cases.filter(c => c.checked).length + ' / ' + cases.length + ' achetés';
+  }
+  cases.forEach(c => {
+    c.checked = achats.has(c.dataset.ingredient);
+    c.addEventListener('change', () => {
+      c.checked ? achats.add(c.dataset.ingredient) : achats.delete(c.dataset.ingredient);
+      try { localStorage.setItem(cle, JSON.stringify(Array.from(achats))); } catch (_) {}
+      actualiser();
+    });
+  });
+  document.getElementById('reinitialiser').addEventListener('click', () => {
+    achats.clear(); cases.forEach(c => c.checked = false);
+    try { localStorage.removeItem(cle); } catch (_) {}
+    actualiser();
+  });
+  document.getElementById('imprimer').addEventListener('click', () => window.print());
+  actualiser();
+</script>
+</body>
+</html>

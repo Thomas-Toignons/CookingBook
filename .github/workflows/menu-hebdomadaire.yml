@@ -1,0 +1,105 @@
+name: Menu hebdomadaire et courses
+
+on:
+  schedule:
+    - cron: '15 7 * * 1'
+      timezone: Europe/Paris
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: Générer le menu ou actualiser les courses et la page
+        type: choice
+        options: [generer, publier]
+        default: generer
+      nouveau_tirage:
+        description: Remplacer explicitement le menu de cette semaine
+        type: boolean
+        default: false
+
+# Une seconde exécution attend la première ; aucun push forcé sur les données.
+concurrency:
+  group: cookingbook-menus
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  construire:
+    # Les règles et le code de référence proviennent toujours de main.
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Récupérer le code de référence
+        uses: actions/checkout@v6
+        with:
+          ref: main
+          path: source
+      - name: Installer Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - name: Vérifier le traitement sur des copies
+        working-directory: source
+        run: python -m unittest discover -s tests -v
+      - name: Récupérer le dépôt de données
+        uses: actions/checkout@v6
+        with:
+          ref: main
+          path: etat
+          fetch-depth: 0
+      - name: Ouvrir ou initialiser la branche menus
+        working-directory: etat
+        shell: bash
+        run: |
+          if git show-ref --verify --quiet refs/remotes/origin/menus; then
+            git switch --track origin/menus
+          else
+            git switch -c menus
+          fi
+      - name: Générer le menu et les fichiers du site
+        env:
+          MODE: ${{ inputs.mode || 'generer' }}
+          NOUVEAU_TIRAGE: ${{ inputs.nouveau_tirage }}
+        shell: bash
+        run: |
+          options=()
+          if [[ "$NOUVEAU_TIRAGE" == "true" ]]; then
+            options+=(--nouveau-tirage)
+          fi
+          python source/scripts/principal.py "$MODE" \
+            --base etat/cookBook \
+            --regles source/regles.toml \
+            --sortie etat/docs \
+            --historique etat/menus/historique.json \
+            "${options[@]}"
+      - name: Enregistrer et pousser les données
+        working-directory: etat
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add cookBook menus/historique.json docs/index.html docs/courses.csv
+          if ! git diff --cached --quiet; then
+            git commit -m "Actualiser le menu et la liste de courses"
+          fi
+          git push origin HEAD:menus
+      - name: Préparer les fichiers GitHub Pages
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: etat/docs
+  deployer:
+    needs: construire
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploiement.outputs.page_url }}
+    steps:
+      - name: Déployer GitHub Pages
+        id: deploiement
+        uses: actions/deploy-pages@v4

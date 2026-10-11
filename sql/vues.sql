@@ -90,7 +90,9 @@ LEFT JOIN recette AS r
 LEFT JOIN planning_repas AS midi
     ON midi.jour_repas = j.lendemain
     AND midi.type_repas = 'Dejeuner'
-    AND midi.id_recette = soir.id_recette
+    -- Le lundi courant reprend l'ancien dimanche. Pour le nouveau dimanche,
+    -- les portions du lundi sont le modèle de celles du lundi suivant.
+    AND (j.jour = 'Dimanche' OR midi.id_recette = soir.id_recette)
 WHERE soir.type_repas = 'Diner';
 
 CREATE VIEW vue_ingredients_repas_soir AS
