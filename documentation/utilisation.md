@@ -37,6 +37,14 @@ python3 scripts/principal.py generer --semaine 2026-10-12
 
 Le nouveau tirage conserve la recette du lundi midi provenant de la semaine précédente. Le mode `publier` refuse `--semaine` et `--nouveau-tirage` : il exporte toujours le planning courant.
 
+Le workflow utilise aussi le mode `automatique` lors d'un push sur `main` :
+
+```bash
+python3 scripts/principal.py automatique
+```
+
+Ce mode publie le planning courant sans changer les recettes. Si aucun menu daté n'existe dans la base, il initialise le premier menu pour la semaine courante. Il ne crée pas une nouvelle semaine lors des pushes suivants, même si le planning enregistré est ancien : la génération hebdomadaire reste réservée au traitement du lundi. Les changements de règles prennent effet à la prochaine génération ; un push des règles ne refait pas le tirage courant.
+
 Une relance normale réaffecte les recettes du menu enregistré aux créneaux. Pour conserver une modification manuelle des recettes du planning, utiliser `publier` ; les modifications manuelles de recettes ne réécrivent pas l'historique des dîners. Pour un menu hebdomadaire cohérent dans le temps, laisser le générateur gérer les recettes.
 
 ## Chemins personnalisés et essai sur une copie
@@ -53,7 +61,7 @@ python3 scripts/principal.py generer \
 
 Fermer la base avant d'utiliser une copie de fichier avec `cp`. Le programme utilise une sauvegarde SQLite cohérente pour ses propres backups.
 
-Le modèle et les vues SQL sont lus depuis le dépôt du code, indépendamment de l'emplacement de la base. C'est ce qui permet au workflow d'utiliser le code de `main` avec la base de `menus`.
+Le modèle et les vues SQL sont lus depuis le dépôt du code, indépendamment de l'emplacement de la base. Le workflow utilise désormais directement le code et la base de `main` ; les chemins personnalisés restent utiles pour les essais sur une copie.
 
 Pour consulter la page générée localement :
 

@@ -1,4 +1,4 @@
-"""Tests d'intégration sur des copies de la vraie base, jamais sur l'original."""
+"""Tests d'intégration sur une base temporaire, indépendante des données personnelles."""
 
 import json
 import random
@@ -22,14 +22,26 @@ class MenuTest(unittest.TestCase):
         self.tmp = tempfile.TemporaryDirectory()
         self.dossier = Path(self.tmp.name)
         self.base = self.dossier / "cookBook"
-        with ouvrir_base(RACINE / "cookBook") as source, sqlite3.connect(self.base) as cible:
-            source.backup(cible)
+        self.config = self.dossier / "regles.toml"
+        self.config.write_text('[menu]\nnombre_non_vegetariens = 2\nrecettes_distinctes = true\ndejeuner_identique_au_diner_precedent = true\n[selection]\nrecettes_actives_uniquement = true\n')
+        with sqlite3.connect(self.base) as cible:
+            cible.executescript((RACINE / "tests/fixtures.sql").read_text())
+            cible.executemany("INSERT INTO recette VALUES (?, ?, ?, 2, ?)", [
+                (i, f"Recette {i}", "Végétarien" if i <= 8 else "Non végétarien", int(i != 12))
+                for i in range(1, 13)
+            ])
+            cible.execute("INSERT INTO ingredient VALUES (1, 'Riz', 'g', 50, 1000, 2, 3)")
+            cible.executemany("INSERT INTO recette_ingredient VALUES (?, ?, 1, 200, NULL)",
+                             [(i, i) for i in range(1, 13)])
+            cible.executemany("INSERT INTO planning_repas VALUES (?, ?, ?, ?, ?, 1, NULL)", [
+                (i * 3 + k + 1, jour, repas, 1 if k == 0 else 9,
+                 int(jour not in ("Vendredi", "Samedi")))
+                for i, jour in enumerate(JOURS)
+                for k, repas in enumerate(("Petit-dejeuner", "Dejeuner", "Diner"))
+            ])
+            cible.executescript((RACINE / "sql/vues.sql").read_text())
         self.c = ouvrir_base(self.base)
-        # Les tests restent valides si la base main contient déjà un historique.
-        self.c.execute("DROP TABLE IF EXISTS menu_courant")
-        self.c.execute("DROP TABLE IF EXISTS menu_semaine")
-        self.c.commit()
-        self.regles = lire_regles(RACINE / "regles.toml")
+        self.regles = lire_regles(self.config)
         # Les tests fixent les règles métier initiales indépendamment des futures personnalisations.
         self.regles["menu"] = {"nombre_non_vegetariens": 2, "recettes_distinctes": True,
                                "dejeuner_identique_au_diner_precedent": True}
@@ -132,7 +144,7 @@ class MenuTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "insuffisantes"):
             generer_menu(self.c, self.regles)
         mauvais = self.dossier / "mauvais.toml"
-        mauvais.write_text((RACINE / "regles.toml").read_text().replace("nombre_non_vegetariens = 2", "nombre_non_vegetariens = true"))
+        mauvais.write_text(self.config.read_text().replace("nombre_non_vegetariens = 2", "nombre_non_vegetariens = true"))
         with self.assertRaisesRegex(ValueError, "Type incorrect"):
             lire_regles(mauvais)
 
@@ -168,7 +180,7 @@ class MenuTest(unittest.TestCase):
         from unittest.mock import patch
         with patch("principal.generer_site", side_effect=ValueError("échec rendu")):
             with self.assertRaisesRegex(ValueError, "échec rendu"):
-                executer("generer", self.base, RACINE / "regles.toml", sortie, historique, "2026-10-12")
+                executer("generer", self.base, self.config, sortie, historique, "2026-10-12")
         self.assertEqual(avant, list(self.c.execute("SELECT * FROM planning_repas ORDER BY id_planning")))
         self.assertEqual("ancienne page", (sortie / "index.html").read_text())
 
@@ -178,6 +190,28 @@ class MenuTest(unittest.TestCase):
             self.appliquer("2026-10-26")
         with self.assertRaisesRegex(ValueError, "antérieure"):
             self.appliquer("2026-10-05")
+
+    def test_push_initialise_puis_preserve_modifications_manuelles(self):
+        from unittest.mock import patch
+        sortie, historique = self.dossier / "docs", self.dossier / "historique.json"
+        with patch("principal.lundi_de", return_value=date(2026, 10, 12)):
+            executer("automatique", self.base, self.config, sortie, historique)
+        self.assertEqual("2026-10-12", self.c.execute("SELECT semaine FROM menu_courant").fetchone()[0])
+        # Un utilisateur peut changer le planning ; un push ne doit pas réaffecter les recettes.
+        self.c.execute("UPDATE planning_repas SET present=0 WHERE type_repas='Diner'")
+        self.c.execute("UPDATE planning_repas SET id_recette=2 WHERE jour_repas='Mardi' AND type_repas='Diner'")
+        self.c.commit()
+        avant = list(self.c.execute("SELECT * FROM planning_repas ORDER BY id_planning"))
+        # Même une semaine plus tard, le push reste une publication, pas une génération.
+        with patch("principal.lundi_de", return_value=date(2026, 10, 19)):
+            executer("automatique", self.base, self.config, sortie, historique)
+        self.assertEqual(avant, list(self.c.execute("SELECT * FROM planning_repas ORDER BY id_planning")))
+        self.assertEqual(1, self.c.execute("SELECT COUNT(*) FROM menu_semaine").fetchone()[0])
+
+    def test_automatique_refuse_options_de_tirage(self):
+        with self.assertRaisesRegex(ValueError, "Seul le mode generer"):
+            executer("automatique", self.base, self.config, self.dossier / "docs",
+                     self.dossier / "historique.json", nouveau_tirage=True)
 
 
 if __name__ == "__main__":

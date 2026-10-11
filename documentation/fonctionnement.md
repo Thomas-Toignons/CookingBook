@@ -26,6 +26,16 @@ regles.toml + cookBook
 
 `principal.py` importe les fonctions des autres scripts. Git est géré par le workflow, pas par le programme Python : une exécution locale ne pousse jamais de modifications.
 
+## Une seule branche de travail
+
+Le code, la base et les exports sont conservés sur `main`. La branche `menus` n'est plus utilisée ; le dossier `menus/` reste le dossier d'export JSON de l'historique.
+
+Le workflow se déclenche le lundi matin pour générer le menu. Les pushes de la base, du fichier LibreOffice, des règles, des scripts, du modèle, des vues SQL ou du workflow déclenchent une actualisation des courses et du site. Les pushes de documentation seule n'ont pas besoin de republier le site.
+
+Lors d'un push, le mode `automatique` conserve le menu courant. La seule exception est l'initialisation, lorsqu'aucun menu daté n'existe : il génère alors le premier menu. Le workflow pousse ensuite les résultats sur `main` avec `GITHUB_TOKEN`, ce qui ne déclenche pas un nouveau workflow de push. Le déploiement est réalisé dans la même exécution.
+
+Les exécutions partagent une file et récupèrent le dernier état de `main` au démarrage. Les pushes ne sont jamais forcés ; un changement concurrent de `main` fait échouer le push automatique plutôt que d'écraser des données. Un `git pull` avant les modifications manuelles est indispensable pour récupérer notamment le menu du lundi.
+
 ## Sélection des recettes
 
 Les recettes sont réparties selon les valeurs exactes `Végétarien` et `Non végétarien`. Une catégorie manquante ou différente ne participe pas au tirage. Les recettes affectées aux petits-déjeuners sont exclues des candidates, indépendamment des présences. Les recettes inactives sont exclues lorsque la règle correspondante est activée.
@@ -63,7 +73,7 @@ Le programme sauvegarde la base avec l'API SQLite dans `backups/`. Il effectue l
 
 Les nouveaux exports sont préparés dans un dossier temporaire. Après validation de la transaction, les fichiers sont remplacés individuellement. Un incident disque à ce dernier stade peut laisser les exports désynchronisés ; relancer `publier` les reconstruit depuis la base validée. SQLite et le système de fichiers ne forment pas une transaction commune.
 
-Les sauvegardes sont locales, ignorées par Git et ne sont pas publiées. Sur un runner GitHub, elles disparaissent après le job ; la version précédente de la base reste accessible dans l'historique Git de `menus`. Les sauvegardes locales ne sont pas supprimées automatiquement.
+Les sauvegardes sont locales, ignorées par Git et ne sont pas publiées. Sur un runner GitHub, elles disparaissent après le job ; la version précédente de la base reste accessible dans l'historique Git de `main`. Les sauvegardes locales ne sont pas supprimées automatiquement.
 
 ## Site
 

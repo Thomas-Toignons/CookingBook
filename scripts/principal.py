@@ -15,13 +15,21 @@ from generer_site import generer_site
 
 def executer(mode, base, regles, sortie, historique, semaine=None, nouveau_tirage=False):
     configuration = lire_regles(regles)
-    if mode == "publier" and (nouveau_tirage or semaine):
-        raise ValueError("Le mode publier utilise la semaine courante : pas de --semaine ou --nouveau-tirage.")
+    if mode not in ("generer", "publier", "automatique"):
+        raise ValueError(f"Mode inconnu : {mode}.")
+    if mode != "generer" and (nouveau_tirage or semaine):
+        raise ValueError("Seul le mode generer accepte --semaine ou --nouveau-tirage.")
     sortie, historique = Path(sortie), Path(historique)
     sortie.mkdir(parents=True, exist_ok=True)
     historique.parent.mkdir(parents=True, exist_ok=True)
     connexion = ouvrir_base(base)
     try:
+        if mode == "automatique":
+            # Les pushes publient le planning existant ; seul le premier initialise
+            # un menu daté, avant que la planification du lundi prenne le relais.
+            table = connexion.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='menu_courant'").fetchone()
+            initialise = table and connexion.execute("SELECT 1 FROM menu_courant WHERE singleton=1").fetchone()
+            mode = "publier" if initialise else "generer"
         # Sauvegarde SQLite cohérente, y compris si la base possède un journal WAL.
         sauvegardes = Path(base).resolve().parent / "backups"
         sauvegardes.mkdir(exist_ok=True)
@@ -63,7 +71,8 @@ def executer(mode, base, regles, sortie, historique, semaine=None, nouveau_tirag
 
 def main():
     parser = options_communes("Générer le menu ou actualiser les exports sans refaire le tirage.")
-    parser.add_argument("mode", choices=("generer", "publier"))
+    parser.add_argument("mode", choices=("generer", "publier", "automatique"),
+                        help="automatique publie le menu courant ou initialise le premier menu si nécessaire")
     parser.add_argument("--sortie", type=Path, default=RACINE / "docs")
     parser.add_argument("--historique", type=Path, default=RACINE / "menus/historique.json")
     parser.add_argument("--nouveau-tirage", action="store_true", help="Remplacer explicitement le tirage de la semaine.")

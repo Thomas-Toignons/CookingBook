@@ -48,11 +48,27 @@ python3 scripts/generer_menu.py
 - [Règles et commandes](documentation/utilisation.md)
 - [Git, modifications manuelles et GitHub Pages](documentation/github-pages.md)
 
-## Organisation des branches
+## Utilisation quotidienne sur main
 
-`main` contient le code, les règles et le modèle HTML. `menus` conserve la base utilisée au quotidien, l'historique et le site généré. Le workflow crée `menus` depuis `main` si elle n'existe pas, puis utilise toujours sa dernière base. La base de `main` sert seulement à l'initialisation et aux tests.
+**Tout se fait sur `main`** : base `cookBook`, interface LibreOffice, recettes, règles, scripts et exports. La branche `menus` n'est plus utilisée. Le dossier `menus/` contient simplement l'export JSON de l'historique ; ce n'est pas une branche.
 
-Ne pas fusionner une ancienne base de `main` par-dessus celle de `menus`. Le workflow exécute le code de `main` sans remplacer les données de `menus`.
+1. Fermer LibreOffice et récupérer la dernière base : `git pull --ff-only origin main`.
+2. Modifier les présences, stocks, portions ou recettes dans LibreOffice, puis le fermer.
+3. Faire un commit et pousser sur `main` : les courses et le site sont actualisés automatiquement, sans refaire le tirage.
+
+```bash
+git add cookBook
+git commit -m "Actualiser les présences et les stocks"
+git push origin main
+```
+
+Ajouter aussi `cookingBook.odb` au commit si les formulaires ou rapports LibreOffice ont changé.
+
+Le lundi à **7 h 15, heure de Paris**, le workflow génère le menu et pousse la base mise à jour sur `main`, puis publie le site. Il faut donc faire le `git pull` **avant** tes modifications. SQLite étant un fichier binaire, Git ne peut pas fusionner deux modifications concurrentes de la base.
+
+Le premier push qui déclenche le workflow initialise le menu si aucun menu daté n'existe. Après initialisation, les pushes publient le planning courant ; seul le traitement du lundi génère la nouvelle semaine. Les changements de règles s'appliquent à la prochaine génération.
+
+Pour activer le site et la planification, suivre le [guide GitHub Pages](documentation/github-pages.md).
 
 ## Vérifications
 
@@ -60,4 +76,4 @@ Ne pas fusionner une ancienne base de `main` par-dessus celle de `menus`. Le wor
 python3 -m unittest discover -s tests -v
 ```
 
-Les tests utilisent des copies temporaires de la base et ne modifient pas `cookBook`.
+Les tests créent des bases temporaires avec des données et des règles de test indépendantes de tes recettes. Ils ne modifient pas `cookBook`.

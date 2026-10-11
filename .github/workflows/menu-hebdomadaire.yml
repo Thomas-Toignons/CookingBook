@@ -1,6 +1,16 @@
 name: Menu hebdomadaire et courses
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - cookBook
+      - cookingBook.odb
+      - regles.toml
+      - 'scripts/**'
+      - 'templates/**'
+      - 'sql/**'
+      - '.github/workflows/menu-hebdomadaire.yml'
   schedule:
     - cron: '15 7 * * 1'
       timezone: Europe/Paris
@@ -18,7 +28,7 @@ on:
 
 # Une seconde exécution attend la première ; aucun push forcé sur les données.
 concurrency:
-  group: cookingbook-menus
+  group: cookingbook-main
   cancel-in-progress: false
 
 permissions:
@@ -26,42 +36,26 @@ permissions:
 
 jobs:
   construire:
-    # Les règles et le code de référence proviennent toujours de main.
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
-      - name: Récupérer le code de référence
+      # Lire le dernier main, même lorsqu'un ancien push attend dans la file.
+      - name: Récupérer le code et la base de main
         uses: actions/checkout@v6
         with:
           ref: main
-          path: source
+          fetch-depth: 0
       - name: Installer Python
         uses: actions/setup-python@v6
         with:
           python-version: '3.12'
-      - name: Vérifier le traitement sur des copies
-        working-directory: source
+      - name: Vérifier le traitement sur des bases temporaires
         run: python -m unittest discover -s tests -v
-      - name: Récupérer le dépôt de données
-        uses: actions/checkout@v6
-        with:
-          ref: main
-          path: etat
-          fetch-depth: 0
-      - name: Ouvrir ou initialiser la branche menus
-        working-directory: etat
-        shell: bash
-        run: |
-          if git show-ref --verify --quiet refs/remotes/origin/menus; then
-            git switch --track origin/menus
-          else
-            git switch -c menus
-          fi
       - name: Générer le menu et les fichiers du site
         env:
-          MODE: ${{ inputs.mode || 'generer' }}
+          MODE: ${{ github.event_name == 'push' && 'automatique' || inputs.mode || 'generer' }}
           NOUVEAU_TIRAGE: ${{ inputs.nouveau_tirage }}
         shell: bash
         run: |
@@ -69,14 +63,8 @@ jobs:
           if [[ "$NOUVEAU_TIRAGE" == "true" ]]; then
             options+=(--nouveau-tirage)
           fi
-          python source/scripts/principal.py "$MODE" \
-            --base etat/cookBook \
-            --regles source/regles.toml \
-            --sortie etat/docs \
-            --historique etat/menus/historique.json \
-            "${options[@]}"
+          python scripts/principal.py "$MODE" "${options[@]}"
       - name: Enregistrer et pousser les données
-        working-directory: etat
         shell: bash
         run: |
           git config user.name 'github-actions[bot]'
@@ -85,11 +73,13 @@ jobs:
           if ! git diff --cached --quiet; then
             git commit -m "Actualiser le menu et la liste de courses"
           fi
-          git push origin HEAD:menus
+          # GITHUB_TOKEN ne redéclenche pas les workflows sur ce push.
+          # Un main modifié en parallèle fait échouer ce push, sans écrasement.
+          git push origin HEAD:main
       - name: Préparer les fichiers GitHub Pages
         uses: actions/upload-pages-artifact@v4
         with:
-          path: etat/docs
+          path: docs
   deployer:
     needs: construire
     runs-on: ubuntu-latest
