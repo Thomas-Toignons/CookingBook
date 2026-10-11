@@ -5,4 +5,3 @@ __pycache__/
 /cookBook-wal
 /cookBook-shm
 .~lock.*#
-/tests/
