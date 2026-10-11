@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CookingBook · Menu et courses</title>
+  <style>
+    :root { color-scheme: light; --fond:#f7f5ef; --papier:#fff; --texte:#223b31; --vert:#315c46; --bord:#dedfd5; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--fond); color:var(--texte); font:17px/1.5 system-ui,sans-serif; }
+    main { max-width:1120px; margin:auto; padding:32px 20px 60px; }
+    header { padding-bottom:28px; border-bottom:1px solid var(--bord); }
+    .signature { font-size:13px; letter-spacing:.15em; text-transform:uppercase; font-weight:700; }
+    h1 { font:clamp(32px,6vw,54px)/1.15 Georgia,serif; margin:14px 0; }
+    h2 { font:30px/1.2 Georgia,serif; margin:0 0 16px; }
+    h3 { margin:0 0 14px; font-size:18px; } h3 small { color:#617267; font-size:14px; font-weight:400; }
+    p { margin:8px 0; } .secondaire { color:#617267; font-size:14px; }
+    nav,.actions { display:flex; gap:10px; flex-wrap:wrap; margin-top:20px; }
+    a,button { color:var(--vert); } nav a,.actions a,button { border:1px solid var(--bord); background:var(--papier); padding:10px 16px; border-radius:8px; text-decoration:none; font:inherit; cursor:pointer; }
+    a:focus-visible,button:focus-visible,input:focus-visible { outline:3px solid #bd791c; outline-offset:3px; }
+    section { margin-top:34px; } .entete { display:flex; justify-content:space-between; align-items:baseline; gap:12px; flex-wrap:wrap; }
+    .courses { list-style:none; padding:0; margin:18px 0; border:1px solid var(--bord); border-radius:12px; background:var(--papier); overflow:hidden; }
+    .courses li+li { border-top:1px solid var(--bord); }
+    .courses label { display:flex; gap:12px; align-items:center; padding:16px; cursor:pointer; }
+    input { width:22px; height:22px; flex-shrink:0; accent-color:var(--vert); }
+    .ingredient { flex:1; } .quantite { font-variant-numeric:tabular-nums; font-weight:650; white-space:nowrap; }
+    input:checked~span { text-decoration:line-through; opacity:.45; }
+    .vide { padding:20px; } .budget { display:flex; gap:24px; flex-wrap:wrap; }
+    .grille { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:14px; }
+    .jour { background:var(--papier); border:1px solid var(--bord); padding:20px; border-radius:12px; }
+    .repas+.repas { border-top:1px solid var(--bord); margin-top:15px; padding-top:15px; }
+    .label { font-size:12px; text-transform:uppercase; letter-spacing:.1em; color:#617267; }
+    .badge,.absent { display:inline-block; font-size:12px; padding:3px 8px; border-radius:5px; margin:4px 4px 0 0; }
+    .badge { background:#f5ead8; color:#805214; } .absent { background:#eef0eb; color:#617267; }
+    footer { margin-top:36px; border-top:1px solid var(--bord); padding-top:16px; }
+    @media(max-width:480px) { main { padding:24px 14px; } .courses label { padding:14px 10px; gap:8px; } }
+    @media print { body { background:white; font-size:12px; } main { max-width:none; padding:0; } nav,.actions,footer { display:none; } h1 { font-size:28px; } .jour,.courses li { break-inside:avoid; } .grille { grid-template-columns:repeat(3,1fr); } }
+  </style>
+</head>
+<body data-semaine="2026-10-05">
+<main>
+  <header>
+    <div class="signature">CookingBook · À table cette semaine</div>
+    <h1>Le menu est prêt.<br>Place aux courses.</h1>
+    <p>Semaine du 05/10/2026 au 11/10/2026</p>
+    <p class="secondaire">Mise à jour le 11/10/2026 à 21:09 · Les courses suivent les présences et le stock renseignés.</p>
+    <nav aria-label="Navigation"><a href="#courses">Liste de courses</a><a href="#menu">Menu de la semaine</a></nav>
+  </header>
+  <section id="courses" aria-labelledby="titre-courses">
+    <div class="entete"><h2 id="titre-courses">Dans le panier</h2><span id="progression" aria-live="polite">7 ingrédients</span></div>
+    <p class="secondaire">Coche les achats au fur et à mesure. Les coches restent sur cet appareil, pour cette semaine.</p>
+    <ul class="courses"><li><label for="achat-0"><input id="achat-0" type="checkbox" data-ingredient="Carotte"><span class="ingredient">Carotte</span><span class="quantite">700 g</span></label></li>
+<li><label for="achat-1"><input id="achat-1" type="checkbox" data-ingredient="Curry"><span class="ingredient">Curry</span><span class="quantite">18 g</span></label></li>
+<li><label for="achat-2"><input id="achat-2" type="checkbox" data-ingredient="Fromage blanc nature"><span class="ingredient">Fromage blanc nature</span><span class="quantite">50 g</span></label></li>
+<li><label for="achat-3"><input id="achat-3" type="checkbox" data-ingredient="Légumes mélangés surgelés"><span class="ingredient">Légumes mélangés surgelés</span><span class="quantite">400 g</span></label></li>
+<li><label for="achat-4"><input id="achat-4" type="checkbox" data-ingredient="Poulet"><span class="ingredient">Poulet</span><span class="quantite">360 g</span></label></li>
+<li><label for="achat-5"><input id="achat-5" type="checkbox" data-ingredient="Skir"><span class="ingredient">Skir</span><span class="quantite">1250 g</span></label></li>
+<li><label for="achat-6"><input id="achat-6" type="checkbox" data-ingredient="Tomates concassées"><span class="ingredient">Tomates concassées</span><span class="quantite">600 g</span></label></li></ul>
+    <div class="budget"><span>Coût estimé : <strong>6,65 €</strong></span><span>Selon les prix magasin renseignés : <strong>6,9 €</strong></span></div>
+    <p class="secondaire">Les totaux utilisent les tarifs disponibles dans la base ; les prix manquants comptent pour zéro.</p>
+    <div class="actions"><a href="courses.csv" download>Télécharger le CSV</a><button id="imprimer" type="button">Imprimer</button><button id="reinitialiser" type="button">Décocher les achats</button></div>
+  </section>
+  <section id="menu" aria-labelledby="titre-menu">
+    <h2 id="titre-menu">Cette semaine à table</h2>
+    <p class="secondaire">Le dîner devient le déjeuner du lendemain. Le lundi midi reprend le dimanche de la semaine précédente.</p>
+    <div class="grille"><article class="jour"><h3>Lundi <small>05/10</small></h3><div class="repas"><span class="label">Déjeuner</span><p>Poulet curry, carottes &amp; riz</p><span class="badge">Non végétarien</span></div><div class="repas"><span class="label">Dîner</span><p>Lentilles vertes, tomate &amp; pommes de terre</p></div></article>
+<article class="jour"><h3>Mardi <small>06/10</small></h3><div class="repas"><span class="label">Déjeuner</span><p>Lentilles vertes, tomate &amp; pommes de terre</p></div><div class="repas"><span class="label">Dîner</span><p>Dhal lentilles corail, carottes &amp; riz</p></div></article>
+<article class="jour"><h3>Mercredi <small>07/10</small></h3><div class="repas"><span class="label">Déjeuner</span><p>Dhal lentilles corail, carottes &amp; riz</p></div><div class="repas"><span class="label">Dîner</span><p>Semoule, pois chiches &amp; légumes</p></div></article>
+<article class="jour"><h3>Jeudi <small>08/10</small></h3><div class="repas"><span class="label">Déjeuner</span><p>Semoule, pois chiches &amp; légumes</p></div><div class="repas"><span class="label">Dîner</span><p>Poulet, pommes de terre &amp; haricots verts</p><span class="badge">Non végétarien</span></div></article>
+<article class="jour"><h3>Vendredi <small>09/10</small></h3><div class="repas"><span class="label">Déjeuner</span><p>Poulet, pommes de terre &amp; haricots verts</p><span class="badge">Non végétarien</span></div><div class="repas"><span class="label">Dîner</span><p>Bolognaise de lentilles &amp; pâtes</p><span class="absent">Absent · hors courses</span></div></article>
+<article class="jour"><h3>Samedi <small>10/10</small></h3><div class="repas"><span class="label">Déjeuner</span><p>Bolognaise de lentilles &amp; pâtes</p><span class="absent">Absent · hors courses</span></div><div class="repas"><span class="label">Dîner</span><p>Poulet paprika, semoule &amp; légumes</p><span class="badge">Non végétarien</span><span class="absent">Absent · hors courses</span></div></article>
+<article class="jour"><h3>Dimanche <small>11/10</small></h3><div class="repas"><span class="label">Déjeuner</span><p>Poulet paprika, semoule &amp; légumes</p><span class="badge">Non végétarien</span><span class="absent">Absent · hors courses</span></div><div class="repas"><span class="label">Dîner</span><p>Chili haricots rouges &amp; riz</p></div></article></div>
+  </section>
+  <footer class="secondaire">CookingBook · Une liste commune, des coches propres à chaque appareil.</footer>
+</main>
+<script>
+  const cle = 'cookingbook-achats-' + document.body.dataset.semaine;
+  const cases = Array.from(document.querySelectorAll('input[data-ingredient]'));
+  let achats = new Set();
+  try { achats = new Set(JSON.parse(localStorage.getItem(cle) || '[]')); } catch (_) {}
+  function actualiser() {
+    document.getElementById('progression').textContent = cases.filter(c => c.checked).length + ' / ' + cases.length + ' achetés';
+  }
+  cases.forEach(c => {
+    c.checked = achats.has(c.dataset.ingredient);
+    c.addEventListener('change', () => {
+      c.checked ? achats.add(c.dataset.ingredient) : achats.delete(c.dataset.ingredient);
+      try { localStorage.setItem(cle, JSON.stringify(Array.from(achats))); } catch (_) {}
+      actualiser();
+    });
+  });
+  document.getElementById('reinitialiser').addEventListener('click', () => {
+    achats.clear(); cases.forEach(c => c.checked = false);
+    try { localStorage.removeItem(cle); } catch (_) {}
+    actualiser();
+  });
+  document.getElementById('imprimer').addEventListener('click', () => window.print());
+  actualiser();
+</script>
+</body>
+</html>

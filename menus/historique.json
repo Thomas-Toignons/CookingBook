@@ -1,0 +1,26 @@
+[
+  {
+    "semaine": "2026-10-05",
+    "diners": [
+      13,
+      5,
+      6,
+      7,
+      8,
+      14,
+      2
+    ],
+    "lundi_midi": 3,
+    "regles": {
+      "menu": {
+        "nombre_non_vegetariens": 2,
+        "recettes_distinctes": true,
+        "dejeuner_identique_au_diner_precedent": true
+      },
+      "selection": {
+        "recettes_actives_uniquement": true
+      }
+    },
+    "genere_le": "2026-10-11T19:09:34.028444+00:00"
+  }
+]
