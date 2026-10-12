@@ -1,7 +1,10 @@
 ﻿ingredient;unite;quantite_necessaire;stock_quantite;quantite_a_acheter;cout_estime;cout_reel
-Carotte;g;550.0;0.0;550.0;0.83;1.09
+Carotte;g;250.0;0.0;250.0;0.38;0.5
 Curry;g;14.0;0.0;14.0;0.35;0
 Légumes mélangés surgelés;g;400.0;0.0;400.0;0.92;0
-Poulet;g;240.0;0.0;240.0;1.9;2.82
+Petits pois surgelés;g;600.0;0.0;600.0;1.32;0
+Pois chiches égouttés;g;960.0;800.0;160.0;0.6;0
+Poulet;g;340.0;0.0;340.0;2.69;4.0
 Skir;g;1250.0;0.0;1250.0;0;0
-Tomates concassées;g;1400.0;800.0;600.0;1.28;1.19
+Tomates concassées;g;1200.0;800.0;400.0;0.85;0.8
+Épinards surgelés;g;300.0;240.0;60.0;0.15;0
