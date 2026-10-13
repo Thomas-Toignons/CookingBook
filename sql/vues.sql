@@ -31,23 +31,36 @@ courses AS (
         i.unite_reference AS unite,
         b.quantite_necessaire,
         i.stock_quantite,
-        MAX(0, b.quantite_necessaire - i.stock_quantite) AS quantite_a_acheter,
+        MAX(0, b.quantite_necessaire - i.stock_quantite) AS quantite_manquante,
+        i.quantite_conditionnement,
         i.base_tarifaire,
         i.prix_estime,
         i.prix_magasin
     FROM besoins AS b
     JOIN ingredient AS i
         ON i.id_ingredient = b.id_ingredient
+),
+achats AS (
+    SELECT *,
+        CASE WHEN quantite_conditionnement IS NULL THEN quantite_manquante
+             ELSE (CAST(quantite_manquante / quantite_conditionnement AS INTEGER)
+                 + (quantite_manquante > CAST(quantite_manquante / quantite_conditionnement AS INTEGER)
+                    * quantite_conditionnement)) * quantite_conditionnement
+        END AS quantite_a_acheter
+    FROM courses
 )
 SELECT
     ingredient,
     unite,
     quantite_necessaire,
     stock_quantite,
+    quantite_manquante,
+    quantite_conditionnement,
+    CASE WHEN quantite_conditionnement IS NOT NULL THEN CAST(quantite_a_acheter / quantite_conditionnement AS INTEGER) END AS nombre_conditionnements,
     quantite_a_acheter,
-    COALESCE(ROUND(quantite_a_acheter / base_tarifaire * prix_estime, 2), 0) AS cout_estime,
-    COALESCE(ROUND(quantite_a_acheter / base_tarifaire * prix_magasin, 2), 0) AS cout_reel
-FROM courses
+    ROUND(quantite_a_acheter / base_tarifaire * prix_estime, 2) AS cout_estime,
+    ROUND(quantite_a_acheter / base_tarifaire * prix_magasin, 2) AS cout_reel
+FROM achats
 WHERE quantite_a_acheter > 0
 ORDER BY ingredient COLLATE NOCASE;
 
@@ -81,8 +94,8 @@ SELECT
     -- Nom conservé pour la liaison du formulaire LibreOffice « Repas Soir ».
     r.instructions AS intructions_recette,
     soir.id_recette,
-    soir.portions_prevues
-        + COALESCE(midi.portions_prevues, 0)
+    CASE WHEN soir.present = 1 THEN soir.portions_prevues ELSE 0 END
+        + CASE WHEN midi.present = 1 THEN midi.portions_prevues ELSE 0 END
         AS nombre_portions
 FROM planning_repas AS soir
 JOIN jours AS j
@@ -92,9 +105,7 @@ LEFT JOIN recette AS r
 LEFT JOIN planning_repas AS midi
     ON midi.jour_repas = j.lendemain
     AND midi.type_repas = 'Dejeuner'
-    -- Le lundi courant reprend l'ancien dimanche. Pour le nouveau dimanche,
-    -- les portions du lundi sont le modèle de celles du lundi suivant.
-    AND (j.jour = 'Dimanche' OR midi.id_recette = soir.id_recette)
+    AND midi.id_recette = soir.id_recette
 WHERE soir.type_repas = 'Diner';
 
 CREATE VIEW vue_ingredients_repas_soir AS

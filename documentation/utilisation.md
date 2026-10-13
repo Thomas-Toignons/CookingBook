@@ -35,7 +35,7 @@ python3 scripts/principal.py generer --nouveau-tirage
 python3 scripts/principal.py generer --semaine 2026-10-12
 ```
 
-Le nouveau tirage conserve la recette du lundi midi provenant de la semaine précédente. Le mode `publier` refuse `--semaine` et `--nouveau-tirage` : il exporte toujours le planning courant.
+Le nouveau tirage affecte au lundi midi suivant la nouvelle recette du dimanche soir. Le mode `publier` refuse `--semaine` et `--nouveau-tirage` : il exporte toujours le planning courant.
 
 Le workflow utilise aussi le mode `automatique` lors d'un push sur `main` :
 
@@ -88,8 +88,18 @@ python3 scripts/exporter_courses.py --base cookBook --sortie courses.csv
 - **Recettes insuffisantes** : ajouter ou réactiver des recettes de la catégorie concernée, ou ajuster les règles.
 - **Créneau manquant** : compléter les quatorze créneaux déjeuner/dîner dans `planning_repas` avant de relancer.
 - **Règles modifiées / recette désactivée après tirage** : demander un nouveau tirage pour cette semaine.
-- **Semaine précédente manquante** : générer les semaines manquantes dans l'ordre avec `--semaine`, puis générer la semaine actuelle. Ce rattrapage représente un menu théorique pour les semaines sautées ; il ne reconstitue pas les repas réellement pris. Les générations intermédiaires écrasent le planning courant mais ne changent pas les présences.
+- **Semaines sautées** : générer directement la semaine souhaitée. Chaque planning inclut son propre lundi midi suivant ; aucun rattrapage des semaines précédentes n’est nécessaire.
 - **Semaine antérieure au planning courant** : refus pour protéger la continuité de l'historique.
 - **Exports incomplets après un incident disque** : relancer `publier`.
 
 Pour restaurer une sauvegarde, fermer LibreOffice et tout autre accès à la base, conserver une copie de la base actuelle, puis remplacer `cookBook` par la sauvegarde choisie. L'historique est restauré avec la base ; relancer `publier` pour reconstruire les exports.
+
+## Renseigner les conditionnements
+
+Dans LibreOffice, ouvrir « Ingredients » et saisir « Conditionnement (g / ml / pièces) » dans l'unité de référence de l'ingrédient. Laisser vide pour acheter exactement la quantité manquante. Pour des tomates vendues uniquement par lot de 1200 g, saisir 1200 ; pour une boîte achetable seule de 400 g, saisir 400. Pour des œufs vendus par six, saisir 6 avec l'unité piece.
+
+Le stock est retiré avant l'arrondi au nombre de lots. Les prix restent exprimés pour `base_tarifaire` : si un lot de 1200 g coûte 2,40 €, renseigner soit 2,40 avec une base de 1200, soit 2,00 avec une base de 1000. Les deux tarifs, estimé et magasin, utilisent la même base.
+
+## Première migration vers le lundi midi suivant
+
+Fermer LibreOffice puis lancer `python3 scripts/principal.py publier`. Le programme sauvegarde la base, ajoute le champ de conditionnement et convertit le lundi midi courant en lundi midi suivant sans nouveau tirage. Les tailles de paquets restent vides et les présences sont conservées : vérifier la présence du lundi midi, car une ancienne exclusion pour un repas déjà préparé ne représente plus une absence le lundi suivant.

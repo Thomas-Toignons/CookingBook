@@ -11,6 +11,7 @@
       2
     ],
     "lundi_midi": 3,
+    "periode": "lundi_courant",
     "regles": {
       "menu": {
         "nombre_non_vegetariens": 2,
@@ -34,7 +35,8 @@
       8,
       7
     ],
-    "lundi_midi": 2,
+    "lundi_midi": 7,
+    "periode": "lundi_suivant",
     "regles": {
       "menu": {
         "nombre_non_vegetariens": 2,

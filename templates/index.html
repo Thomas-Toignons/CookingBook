@@ -23,7 +23,7 @@
     .courses li+li { border-top:1px solid var(--bord); }
     .courses label { display:flex; gap:12px; align-items:center; padding:16px; cursor:pointer; }
     input { width:22px; height:22px; flex-shrink:0; accent-color:var(--vert); }
-    .ingredient { flex:1; } .quantite { font-variant-numeric:tabular-nums; font-weight:650; white-space:nowrap; }
+    .ingredient { flex:1; } .ingredient small { display:block; } .quantite { font-variant-numeric:tabular-nums; font-weight:650; white-space:nowrap; }
     input:checked~span { text-decoration:line-through; opacity:.45; }
     .vide { padding:20px; } .budget { display:flex; gap:24px; flex-wrap:wrap; }
     .grille { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:14px; }
@@ -42,7 +42,7 @@
   <header>
     <div class="signature">CookingBook · À table cette semaine</div>
     <h1>Le menu est prêt.<br>Place aux courses.</h1>
-    <p>Semaine du $periode</p>
+    <p>Du $periode · lundi soir au lundi midi suivant</p>
     <p class="secondaire">Mise à jour le $actualisation · Les courses suivent les présences et le stock renseignés.</p>
     <nav aria-label="Navigation"><a href="#courses">Liste de courses</a><a href="#menu">Menu de la semaine</a></nav>
   </header>
@@ -51,12 +51,12 @@
     <p class="secondaire">Coche les achats au fur et à mesure. Les coches restent sur cet appareil, pour cette semaine.</p>
     <ul class="courses">$courses</ul>
     <div class="budget"><span>Coût estimé : <strong>$cout_estime €</strong></span><span>Selon les prix magasin renseignés : <strong>$cout_magasin €</strong></span></div>
-    <p class="secondaire">Les totaux utilisent les tarifs disponibles dans la base ; les prix manquants comptent pour zéro.</p>
+    <p class="secondaire">$couverture_prix Les totaux portent sur les quantités à acheter, conditionnements compris.</p>
     <div class="actions"><a href="courses.csv" download>Télécharger le CSV</a><button id="imprimer" type="button">Imprimer</button><button id="reinitialiser" type="button">Décocher les achats</button></div>
   </section>
   <section id="menu" aria-labelledby="titre-menu">
     <h2 id="titre-menu">Cette semaine à table</h2>
-    <p class="secondaire">Le dîner devient le déjeuner du lendemain. Le lundi midi reprend le dimanche de la semaine précédente.</p>
+    <p class="secondaire">Le dîner devient le déjeuner du lendemain. Le dernier lundi midi reprend le dimanche de ce planning.</p>
     <div class="grille">$menu</div>
   </section>
   <footer class="secondaire">CookingBook · Une liste commune, des coches propres à chaque appareil.</footer>

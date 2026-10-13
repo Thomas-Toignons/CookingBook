@@ -7,7 +7,7 @@
 3. Dans **Settings → Actions → General**, vérifier que GitHub Actions est autorisé. Le workflow demande `contents: write` pour enregistrer la base ; les politiques du dépôt et de l'organisation doivent permettre cette écriture. Aucun secret personnel n'est nécessaire : `GITHUB_TOKEN` est fourni automatiquement.
 4. Si `main` est protégée, ses règles doivent permettre au workflow de pousser ses commits. Une obligation de pull request ou de vérifications sur chaque commit peut bloquer cette écriture directe ; adapter les règles du dépôt à ce fonctionnement.
 5. Si **Settings → Environments → github-pages** contient des restrictions de branches, autoriser `main`.
-6. Sans historique daté, vérifier que le dîner du dimanche dans la base représente le dimanche précédant la première semaine générée : il servira au lundi midi.
+6. Vérifier les présences : « Lundi / Dejeuner » désigne le lundi suivant le dimanche du planning. Il reprend la recette de ce dimanche lorsque la liaison des déjeuners est activée.
 7. Pousser les changements sur `main`. Ce push déclenche le traitement et le déploiement. Un menu daté existant est conservé ; sinon, le premier menu est généré.
 
 Si le premier push a précédé la configuration de Pages, ou pour reprendre un déploiement échoué, ouvrir **Actions → Menu hebdomadaire et courses → Run workflow**, choisir `main` et `publier` si le menu a déjà été initialisé. Choisir `generer` si aucun menu daté n'existe. Laisser **nouveau_tirage** décoché.
@@ -26,7 +26,7 @@ Sources officielles : [configuration de Pages](https://docs.github.com/en/pages/
 
 | Déclenchement | Résultat |
 | --- | --- |
-| Lundi à 7 h 15, `Europe/Paris` | Génération de la semaine, enregistrement de la base et des exports sur `main`, publication Pages. |
+| Lundi à 14 h 15, `Europe/Paris` | Génération de la semaine, enregistrement de la base et des exports sur `main`, publication Pages. |
 | Push de `cookBook` ou `cookingBook.odb` sur `main` | Actualisation des courses et du HTML depuis le planning existant, sans nouveau tirage. |
 | Push des règles, scripts, modèle, vues SQL ou du workflow sur `main` | Actualisation du site ; les nouvelles règles prennent effet lors de la prochaine génération. |
 | Premier push déclencheur, sans historique daté | Initialisation du premier menu, puis publication. |
@@ -65,7 +65,7 @@ Le lundi, GitHub modifie lui-même la base sur `main`. Le `git pull` avant les p
 
 Modifier les fichiers sur `main`, faire le commit et pousser comme pour les données. Un changement de `regles.toml` ne remplace pas le menu de la semaine en cours. Pour appliquer de nouvelles règles immédiatement, utiliser le lancement manuel en mode `generer` avec **nouveau_tirage** coché.
 
-`generer` sans cette option réutilise le menu enregistré. `publier` ne change jamais les recettes. Ne pas cocher **nouveau_tirage** avec `publier`.
+`generer` sans cette option réutilise le menu enregistré. `publier` conserve les recettes après la migration initiale. Cette migration réaffecte une seule fois le lundi midi au dimanche du planning, sans refaire les dîners. Ne pas cocher **nouveau_tirage** avec `publier`.
 
 ## Transition depuis l'ancienne branche menus
 

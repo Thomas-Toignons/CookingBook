@@ -20,8 +20,24 @@ def preparer_schema(connexion):
         singleton INTEGER PRIMARY KEY CHECK (singleton = 1),
         semaine TEXT NOT NULL REFERENCES menu_semaine(semaine)
     )""")
-    # Migrer uniquement la vue de préparation du soir ; la vue des courses
-    # existante (y compris ses éventuelles personnalisations) reste intacte.
+    colonnes = {r[1] for r in connexion.execute("PRAGMA table_info(ingredient)")}
+    if "quantite_conditionnement" not in colonnes:
+        connexion.execute("""ALTER TABLE ingredient ADD COLUMN quantite_conditionnement REAL
+            CHECK(quantite_conditionnement IS NULL OR
+                (typeof(quantite_conditionnement) IN ('integer','real') AND quantite_conditionnement > 0))""")
+    colonnes = {r[1] for r in connexion.execute("PRAGMA table_info(menu_semaine)")}
+    if "periode" not in colonnes:
+        connexion.execute("ALTER TABLE menu_semaine ADD COLUMN periode TEXT NOT NULL DEFAULT 'lundi_courant'")
+    # Convertir une seule fois le planning courant, sans refaire les dîners.
+    courant = connexion.execute("""SELECT m.* FROM menu_semaine m JOIN menu_courant c
+        ON c.semaine=m.semaine WHERE m.periode='lundi_courant'""").fetchone()
+    if courant:
+        dimanche = connexion.execute("SELECT id_recette FROM planning_repas WHERE jour_repas='Dimanche' AND type_repas='Diner'").fetchone()
+        if json.loads(courant["regles_json"])["menu"]["dejeuner_identique_au_diner_precedent"]:
+            connexion.execute("UPDATE planning_repas SET id_recette=? WHERE jour_repas='Lundi' AND type_repas='Dejeuner'", (dimanche[0],))
+        midi = connexion.execute("SELECT id_recette FROM planning_repas WHERE jour_repas='Lundi' AND type_repas='Dejeuner'").fetchone()
+        connexion.execute("UPDATE menu_semaine SET lundi_midi=?, periode='lundi_suivant' WHERE semaine=?", (midi[0], courant["semaine"]))
+    # Appliquer les vues dans la transaction appelante, aussi en publication.
     sql = (RACINE / "sql/vues.sql").read_text(encoding="utf-8")
     instruction = ""
     for ligne in sql.splitlines():
@@ -30,7 +46,8 @@ def preparer_schema(connexion):
         instruction += ligne + "\n"
         if sqlite3.complete_statement(instruction):
             texte = instruction.strip()
-            if texte.startswith(('DROP VIEW IF EXISTS "vue_repas_soir"', 'CREATE VIEW vue_repas_soir AS')):
+            if any(texte.startswith(prefixe) for nom in ("vue_repas_soir", "vue_liste_courses")
+                   for prefixe in (f'DROP VIEW IF EXISTS "{nom}"', f'CREATE VIEW {nom} AS')):
                 connexion.execute(instruction)
             instruction = ""
 
@@ -49,27 +66,20 @@ def appliquer_menu(connexion, semaine, regles, nouveau_tirage=False, rng=None):
         valider_diners(connexion, diners, regles)
         if json.loads(existant["regles_json"]) != regles:
             raise ValueError("Règles modifiées : utiliser --nouveau-tirage pour appliquer la nouvelle configuration.")
-        lundi_midi = existant["lundi_midi"]
         genere_le = existant["genere_le"]
     else:
-        if existant:
-            lundi_midi = existant["lundi_midi"]
-        elif precedent:
-            lundi_midi = json.loads(precedent["diners_json"])[6]
-        elif courant:
-            raise ValueError("Semaine précédente manquante. Générer les semaines manquantes dans l'ordre avec --semaine.")
-        else:
-            dimanche = connexion.execute("SELECT id_recette FROM planning_repas WHERE jour_repas='Dimanche' AND type_repas='Diner'").fetchone()
-            if dimanche is None or dimanche[0] is None:
-                raise ValueError("Initialisation : renseigner le dîner du dimanche précédent dans le planning.")
-            lundi_midi = dimanche[0]
         ancien = json.loads(existant["diners_json"]) if existant else (json.loads(precedent["diners_json"]) if precedent else None)
         diners = generer_menu(connexion, regles, ancien, rng)
         genere_le = datetime.now(timezone.utc).isoformat()
-        connexion.execute("""INSERT INTO menu_semaine VALUES (?, ?, ?, ?, ?)
-            ON CONFLICT(semaine) DO UPDATE SET diners_json=excluded.diners_json,
-            lundi_midi=excluded.lundi_midi, regles_json=excluded.regles_json, genere_le=excluded.genere_le""",
-                          (cle, json.dumps(diners), lundi_midi, json.dumps(regles, ensure_ascii=False), genere_le))
+    lundi_midi = diners[6] if regles["menu"]["dejeuner_identique_au_diner_precedent"] else connexion.execute(
+        "SELECT id_recette FROM planning_repas WHERE jour_repas='Lundi' AND type_repas='Dejeuner'"
+    ).fetchone()[0]
+    connexion.execute("""INSERT INTO menu_semaine (semaine, diners_json, lundi_midi, regles_json, genere_le, periode)
+        VALUES (?, ?, ?, ?, ?, 'lundi_suivant')
+        ON CONFLICT(semaine) DO UPDATE SET diners_json=excluded.diners_json,
+        lundi_midi=excluded.lundi_midi, regles_json=excluded.regles_json,
+        genere_le=excluded.genere_le, periode=excluded.periode""",
+        (cle, json.dumps(diners), lundi_midi, json.dumps(regles, ensure_ascii=False), genere_le))
     for i, jour in enumerate(JOURS):
         repas = [("Diner", diners[i])]
         if regles["menu"]["dejeuner_identique_au_diner_precedent"]:
@@ -94,6 +104,6 @@ def semaine_courante(connexion):
 
 def exporter_historique(connexion):
     return [{"semaine": r["semaine"], "diners": json.loads(r["diners_json"]),
-             "lundi_midi": r["lundi_midi"], "regles": json.loads(r["regles_json"]),
+             "lundi_midi": r["lundi_midi"], "periode": r["periode"], "regles": json.loads(r["regles_json"]),
              "genere_le": r["genere_le"]}
             for r in connexion.execute("SELECT * FROM menu_semaine ORDER BY semaine")]

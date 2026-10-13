@@ -7,7 +7,7 @@ import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
 
-from appliquer_menu import appliquer_menu, exporter_historique, semaine_courante
+from appliquer_menu import appliquer_menu, exporter_historique, semaine_courante, preparer_schema
 from commun import RACINE, lire_regles, lundi_de, ouvrir_base, options_communes
 from exporter_courses import exporter_courses, lire_courses
 from generer_site import generer_site
@@ -43,6 +43,7 @@ def executer(mode, base, regles, sortie, historique, semaine=None, nouveau_tirag
                 if mode == "generer":
                     cle = appliquer_menu(connexion, lundi_de(semaine), configuration, nouveau_tirage)
                 else:
+                    preparer_schema(connexion)
                     cle = semaine_courante(connexion)
                 courses = lire_courses(connexion)
                 exporter_courses(courses, travail / "courses.csv")

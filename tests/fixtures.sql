@@ -14,7 +14,8 @@ CREATE TABLE ingredient (
     stock_quantite REAL NOT NULL,
     base_tarifaire REAL NOT NULL,
     prix_estime REAL,
-    prix_magasin REAL
+    prix_magasin REAL,
+    quantite_conditionnement REAL CHECK(quantite_conditionnement IS NULL OR quantite_conditionnement > 0)
 );
 CREATE TABLE recette_ingredient (
     id_recette_ingredient INTEGER PRIMARY KEY,

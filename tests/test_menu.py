@@ -11,7 +11,7 @@ from pathlib import Path
 
 RACINE = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(RACINE / "scripts"))
-from appliquer_menu import appliquer_menu
+from appliquer_menu import appliquer_menu, preparer_schema
 from commun import JOURS, lire_regles, ouvrir_base
 from generer_menu import generer_menu
 from principal import executer
@@ -30,7 +30,7 @@ class MenuTest(unittest.TestCase):
                 (i, f"Recette {i}", "Végétarien" if i <= 8 else "Non végétarien", int(i != 12))
                 for i in range(1, 13)
             ])
-            cible.execute("INSERT INTO ingredient VALUES (1, 'Riz', 'g', 50, 1000, 2, 3)")
+            cible.execute("INSERT INTO ingredient VALUES (1, 'Riz', 'g', 50, 1000, 2, 3, NULL)")
             cible.executemany("INSERT INTO recette_ingredient VALUES (?, ?, 1, 200, NULL)",
                              [(i, i) for i in range(1, 13)])
             cible.executemany("INSERT INTO planning_repas VALUES (?, ?, ?, ?, ?, 1, NULL)", [
@@ -102,25 +102,23 @@ class MenuTest(unittest.TestCase):
         self.assertEqual(a, b)
 
     def test_continuite_et_relance(self):
-        ancien_dimanche = self.c.execute("SELECT id_recette FROM planning_repas WHERE jour_repas='Dimanche' AND type_repas='Diner'").fetchone()[0]
         self.appliquer()
         premier = self.diners()
         for i, jour in enumerate(JOURS):
             midi = self.c.execute("SELECT id_recette FROM planning_repas WHERE jour_repas=? AND type_repas='Dejeuner'", (jour,)).fetchone()[0]
-            self.assertEqual(ancien_dimanche if i == 0 else premier[i-1], midi)
+            self.assertEqual(premier[6] if i == 0 else premier[i-1], midi)
         self.appliquer()
         self.assertEqual(premier, self.diners())
         self.appliquer("2026-10-19")
-        self.assertEqual(premier[6], self.c.execute("SELECT id_recette FROM planning_repas WHERE jour_repas='Lundi' AND type_repas='Dejeuner'").fetchone()[0])
+        self.assertEqual(self.diners()[6], self.c.execute("SELECT id_recette FROM planning_repas WHERE jour_repas='Lundi' AND type_repas='Dejeuner'").fetchone()[0])
         self.assertNotEqual(premier, self.diners())
 
-    def test_nouveau_tirage_conserve_lundi(self):
+    def test_nouveau_tirage_aligne_lundi_sur_dimanche(self):
         self.appliquer()
         ancien = self.diners()
-        midi = self.c.execute("SELECT lundi_midi FROM menu_semaine").fetchone()[0]
         self.appliquer(nouveau=True)
         self.assertNotEqual(ancien, self.diners())
-        self.assertEqual(midi, self.c.execute("SELECT lundi_midi FROM menu_semaine").fetchone()[0])
+        self.assertEqual(self.diners()[6], self.c.execute("SELECT lundi_midi FROM menu_semaine").fetchone()[0])
 
     def test_dimanche_portions_du_lundi_suivant(self):
         self.c.execute("UPDATE planning_repas SET portions_prevues=3 WHERE jour_repas='Lundi' AND type_repas='Dejeuner'")
@@ -194,12 +192,91 @@ class MenuTest(unittest.TestCase):
         self.assertEqual(avant, list(self.c.execute("SELECT * FROM planning_repas ORDER BY id_planning")))
         self.assertEqual("ancienne page", (sortie / "index.html").read_text())
 
-    def test_refuse_trou_historique_et_retour_arriere(self):
+    def test_semaines_independantes_et_refus_retour_arriere(self):
         self.appliquer()
-        with self.assertRaisesRegex(ValueError, "précédente manquante"):
-            self.appliquer("2026-10-26")
+        self.appliquer("2026-10-26")
+        self.assertEqual(self.diners()[6], self.c.execute("SELECT lundi_midi FROM menu_semaine ORDER BY semaine DESC").fetchone()[0])
         with self.assertRaisesRegex(ValueError, "antérieure"):
             self.appliquer("2026-10-05")
+
+    def test_dimanche_courses_et_preparation_suivent_presences(self):
+        self.appliquer()
+        self.c.execute("UPDATE planning_repas SET present=0")
+        self.c.execute("UPDATE ingredient SET stock_quantite=0")
+        for soir, midi in ((1, 1), (1, 0), (0, 1), (0, 0)):
+            self.c.execute("UPDATE planning_repas SET present=? WHERE jour_repas='Dimanche' AND type_repas='Diner'", (soir,))
+            self.c.execute("UPDATE planning_repas SET present=? WHERE jour_repas='Lundi' AND type_repas='Dejeuner'", (midi,))
+            portions = self.c.execute("SELECT nombre_portions FROM vue_repas_soir WHERE jour_semaine='Dimanche'").fetchone()[0]
+            self.assertEqual(soir + midi, portions)
+            courses = self.c.execute("SELECT quantite_necessaire FROM vue_liste_courses").fetchone()
+            self.assertEqual(100 * (soir + midi), courses[0] if courses else 0)
+
+    def test_conditionnements_apres_stock_et_prix(self):
+        self.appliquer()
+        self.c.execute("UPDATE planning_repas SET present=0")
+        self.c.execute("UPDATE planning_repas SET present=1, portions_prevues=13 WHERE jour_repas='Dimanche' AND type_repas='Diner'")
+        # 1300 g nécessaires ; stock retiré avant l'arrondi aux lots de 1200 g.
+        self.c.execute("UPDATE ingredient SET quantite_conditionnement=1200")
+        for stock, achat, lots in ((0, 2400, 2), (100, 1200, 1), (900, 1200, 1), (1300, 0, 0), (1400, 0, 0)):
+            self.c.execute("UPDATE ingredient SET stock_quantite=?", (stock,))
+            r = self.c.execute("SELECT * FROM vue_liste_courses").fetchone()
+            if achat:
+                self.assertEqual(achat, r['quantite_a_acheter'])
+                self.assertEqual(lots, r['nombre_conditionnements'])
+                self.assertEqual(round(achat / 1000 * 3, 2), r['cout_reel'])
+            else:
+                self.assertIsNone(r)
+        self.c.execute("UPDATE ingredient SET stock_quantite=900, quantite_conditionnement=NULL, prix_magasin=NULL")
+        r = self.c.execute("SELECT * FROM vue_liste_courses").fetchone()
+        self.assertEqual(400, r['quantite_a_acheter'])
+        self.assertIsNone(r['cout_reel'])
+        self.c.execute("UPDATE ingredient SET quantite_conditionnement=1200")
+        self.c.commit()
+        sortie = self.dossier / 'docs'
+        executer('publier', self.base, self.config, sortie, self.dossier / 'historique.json')
+        html = (sortie / 'index.html').read_text()
+        self.assertIn('1 lot(s) de 1200 g', html)
+        self.assertIn('Total magasin incomplet', html)
+        import csv
+        with (sortie / 'courses.csv').open(encoding='utf-8-sig') as fichier:
+            ligne = next(csv.DictReader(fichier, delimiter=';'))
+        self.assertEqual(1200, float(ligne['quantite_a_acheter']))
+        self.assertEqual('', ligne['cout_reel'])
+
+    def test_migration_publication_unique_et_transactionnelle(self):
+        self.appliquer()
+        diners = self.diners()
+        self.c.execute("UPDATE menu_semaine SET periode='lundi_courant', lundi_midi=1")
+        self.c.execute("UPDATE planning_repas SET id_recette=1, present=0 WHERE jour_repas='Lundi' AND type_repas='Dejeuner'")
+        self.c.commit()
+        sortie, historique = self.dossier / 'docs', self.dossier / 'historique.json'
+        from unittest.mock import patch
+        with patch('principal.generer_site', side_effect=ValueError('échec rendu')):
+            with self.assertRaises(ValueError):
+                executer('publier', self.base, self.config, sortie, historique)
+        self.assertEqual('lundi_courant', self.c.execute('SELECT periode FROM menu_semaine').fetchone()[0])
+        executer('publier', self.base, self.config, sortie, historique)
+        self.assertEqual(diners, self.diners())
+        self.assertEqual((diners[6], 0), tuple(self.c.execute("SELECT id_recette, present FROM planning_repas WHERE jour_repas='Lundi' AND type_repas='Dejeuner'").fetchone()))
+        html = (sortie / 'index.html').read_text()
+        self.assertIn('19/10', html)
+        self.assertIn('restes du dimanche', html)
+        self.c.execute("UPDATE planning_repas SET id_recette=2 WHERE jour_repas='Lundi' AND type_repas='Dejeuner'")
+        self.c.commit()
+        executer('publier', self.base, self.config, sortie, historique)
+        self.assertEqual(2, self.c.execute("SELECT id_recette FROM planning_repas WHERE jour_repas='Lundi' AND type_repas='Dejeuner'").fetchone()[0])
+
+    def test_migration_ancien_schema_et_conditionnements_invalides(self):
+        self.c.execute('DROP VIEW vue_liste_courses')
+        self.c.execute('ALTER TABLE ingredient DROP COLUMN quantite_conditionnement')
+        self.c.commit()
+        with self.c:
+            self.c.execute('BEGIN IMMEDIATE')
+            preparer_schema(self.c)
+        self.assertIsNone(self.c.execute('SELECT quantite_conditionnement FROM ingredient').fetchone()[0])
+        for valeur in (0, -100, 'texte'):
+            with self.assertRaises(sqlite3.IntegrityError):
+                self.c.execute('UPDATE ingredient SET quantite_conditionnement=?', (valeur,))
 
     def test_push_initialise_puis_preserve_modifications_manuelles(self):
         from unittest.mock import patch

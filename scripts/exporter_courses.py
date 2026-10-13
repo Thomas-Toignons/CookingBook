@@ -11,9 +11,9 @@ def lire_courses(connexion):
 
 
 def exporter_courses(courses, destination):
-    champs = ("ingredient", "unite", "quantite_necessaire", "stock_quantite", "quantite_a_acheter", "cout_estime", "cout_reel")
+    champs = ("ingredient", "unite", "quantite_necessaire", "stock_quantite", "quantite_manquante", "quantite_conditionnement", "nombre_conditionnements", "quantite_a_acheter", "cout_estime", "cout_reel")
     with destination.open("w", encoding="utf-8-sig", newline="") as fichier:
-        writer = csv.DictWriter(fichier, fieldnames=champs, delimiter=";")
+        writer = csv.DictWriter(fichier, fieldnames=champs, delimiter=";", lineterminator="\n")
         writer.writeheader()
         writer.writerows(courses)
 

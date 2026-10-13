@@ -30,7 +30,7 @@ regles.toml + cookBook
 
 Le code, la base et les exports sont conservés sur `main`. La branche `menus` n'est plus utilisée ; le dossier `menus/` reste le dossier d'export JSON de l'historique.
 
-Le workflow se déclenche le lundi matin pour générer le menu. Les pushes de la base, du fichier LibreOffice, des règles, des scripts, du modèle, des vues SQL ou du workflow déclenchent une actualisation des courses et du site. Les pushes de documentation seule n'ont pas besoin de republier le site.
+Le workflow se déclenche le lundi après-midi pour générer le menu. Les pushes de la base, du fichier LibreOffice, des règles, des scripts, du modèle, des vues SQL ou du workflow déclenchent une actualisation des courses et du site. Les pushes de documentation seule n'ont pas besoin de republier le site.
 
 Lors d'un push, le mode `automatique` conserve le menu courant. La seule exception est l'initialisation, lorsqu'aucun menu daté n'existe : il génère alors le premier menu. Le workflow pousse ensuite les résultats sur `main` avec `GITHUB_TOKEN`, ce qui ne déclenche pas un nouveau workflow de push. Le déploiement est réalisé dans la même exécution.
 
@@ -44,28 +44,27 @@ Avec les règles initiales, cinq recettes végétariennes et deux non végétari
 
 Les présences, portions, commentaires et petits-déjeuners ne sont jamais modifiés par la génération. Les quatorze créneaux déjeuner/dîner doivent déjà exister ; un créneau manquant provoque une erreur, sans création implicite de présence.
 
-## Passage entre les semaines
+## Période du planning
 
-La semaine est identifiée par sa date de lundi, calculée dans le fuseau `Europe/Paris`.
+La semaine est identifiée par la date de son lundi, dans le fuseau `Europe/Paris`. La génération automatique est programmée le lundi à 14 h 15.
 
-Deux tables sont ajoutées lors de la première génération :
+Les déjeuners/dîners couvrent le lundi soir jusqu'au lundi midi suivant. Par exemple, le planning du 12 octobre se termine par le déjeuner du 19 octobre. Dans LibreOffice, « Lundi / Dejeuner » désigne ce dernier repas ; les autres créneaux gardent leurs jours habituels. Les petits-déjeuners restent gérés séparément selon leurs présences.
 
-- `menu_semaine` : une entrée par lundi, avec les sept identifiants de dîners, la recette du lundi midi, les règles utilisées et la date de création.
-- `menu_courant` : la semaine représentée dans le planning hebdomadaire actuel.
+Lorsque `dejeuner_identique_au_diner_precedent` est activé, mardi midi reprend lundi soir, et lundi midi suivant reprend dimanche soir. Chaque planning est indépendant du précédent. Un nouveau tirage réaffecte aussi le lundi midi suivant. Si la règle est désactivée, les déjeuners manuels restent en place.
 
-Le lundi midi reprend le dimanche soir de l'historique précédent. Lors de la toute première génération, le dimanche soir du planning existant sert de point de départ : vérifier qu'il représente bien le dimanche précédent.
+`menu_semaine` conserve les dîners, la recette du lundi midi, les règles et la date de génération. Son champ `periode` distingue les archives anciennes (`lundi_courant`) du nouveau fonctionnement (`lundi_suivant`). Seul le planning courant est converti lors de la migration ; les anciennes semaines restent interprétables. `menu_courant` identifie le planning affiché. L'export JSON n'est jamais une source de calcul.
 
-Le nouveau dimanche soir reste enregistré dans l'historique pour le lundi suivant. Il ne remplace pas le déjeuner du lundi courant. Une semaine manquante dans un historique déjà commencé provoque une erreur explicite, plutôt que d'inventer les restes du lundi. Voir la procédure de rattrapage dans [Utilisation](utilisation.md).
+## Courses, portions et conditionnements
 
-`menus/historique.json` est un export de ces tables. Il n'est jamais utilisé comme source pour le prochain tirage : modifier le JSON ne modifie pas le menu.
+`vue_liste_courses` additionne les portions des repas avec `present = 1`, puis retire le stock disponible. Dimanche soir et lundi midi suivant comptent chacun leurs portions selon leur présence. Les vues de préparation utilisent également les présences et n'ajoutent le déjeuner que s'il a la même recette que le dîner.
 
-## Courses et portions
+`ingredient.quantite_conditionnement` est facultatif : NULL conserve l'achat exact du manque ; une valeur positive impose des multiples de ce conditionnement. Elle doit utiliser `unite_reference` (g, ml ou piece), notamment le poids égoutté pour les ingrédients égouttés.
 
-`vue_liste_courses` reste la source du calcul : repas présents, quantités des ingrédients, portions, stock et prix. Python ne duplique aucun de ces calculs. Le CSV reprend toutes les colonnes de la vue. La page affiche les quantités à acheter et les totaux calculés à partir des coûts de la vue.
+Exemple : besoin de 1600 g, stock de 800 g, lot de 1200 g → manque de 800 g, achat de 1200 g. Un stock suffisant ne déclenche aucun achat. Les coûts sont calculés sur la quantité achetée avec les tarifs existants (`quantite_a_acheter / base_tarifaire * prix`). Les tarifs doivent donc correspondre à cette base tarifaire, et non forcément au prix d'un paquet. Les prix manquants donnent NULL et le site signale les totaux incomplets.
 
-Cette vue représente les besoins des **repas consommés dans le planning courant**. Elle ne constitue pas un suivi des lots préparés ou des restes stockés : elle inclut le lundi midi courant et pas le lundi suivant. Les stocks doivent être renseignés selon ton usage habituel ; aucun stock n'est consommé automatiquement.
+Le formulaire « Ingredients » permet de saisir le conditionnement. Le CSV conserve les quantités nécessaires, le stock, le manque, le conditionnement, le nombre de lots et la quantité à acheter. Le site affiche les lots et le manque après stock. Les achats et les surplus ne modifient jamais automatiquement le stock.
 
-`vue_repas_soir` est ajustée pour inclure les portions du lundi suivant dans le dîner du dimanche, même si le lundi courant a une autre recette. Faute de planning daté des présences/portions futures, les portions du lundi courant servent de modèle pour le lundi suivant. Cette vue et `vue_ingredients_repas_soir` sont des aides à la préparation ; elles ne modifient pas le calcul des courses.
+La migration du schéma et des vues est transactionnelle et fonctionne en génération comme en publication. Après la première migration, publier conserve les recettes et les présences manuelles.
 
 ## Transactions et sauvegardes
 
