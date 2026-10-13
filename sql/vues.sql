@@ -78,6 +78,8 @@ WITH jours (jour, lendemain) AS (
 SELECT
     soir.jour_repas AS jour_semaine,
     r.nom AS recette_soir,
+    -- Nom conservé pour la liaison du formulaire LibreOffice « Repas Soir ».
+    r.instructions AS intructions_recette,
     soir.id_recette,
     soir.portions_prevues
         + COALESCE(midi.portions_prevues, 0)

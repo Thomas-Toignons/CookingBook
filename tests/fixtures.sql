@@ -4,7 +4,8 @@ CREATE TABLE recette (
     nom TEXT NOT NULL,
     type_alimentaire TEXT,
     portions_reference REAL NOT NULL CHECK(portions_reference > 0),
-    actif INTEGER NOT NULL CHECK(actif IN (0,1))
+    actif INTEGER NOT NULL CHECK(actif IN (0,1)),
+    instructions TEXT NOT NULL DEFAULT ''
 );
 CREATE TABLE ingredient (
     id_ingredient INTEGER PRIMARY KEY,

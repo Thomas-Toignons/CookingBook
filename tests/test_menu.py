@@ -26,7 +26,7 @@ class MenuTest(unittest.TestCase):
         self.config.write_text('[menu]\nnombre_non_vegetariens = 2\nrecettes_distinctes = true\ndejeuner_identique_au_diner_precedent = true\n[selection]\nrecettes_actives_uniquement = true\n')
         with sqlite3.connect(self.base) as cible:
             cible.executescript((RACINE / "tests/fixtures.sql").read_text())
-            cible.executemany("INSERT INTO recette VALUES (?, ?, ?, 2, ?)", [
+            cible.executemany("INSERT INTO recette (id_recette, nom, type_alimentaire, portions_reference, actif) VALUES (?, ?, ?, 2, ?)", [
                 (i, f"Recette {i}", "Végétarien" if i <= 8 else "Non végétarien", int(i != 12))
                 for i in range(1, 13)
             ])
@@ -129,6 +129,16 @@ class MenuTest(unittest.TestCase):
         resultat = self.c.execute("SELECT nombre_portions FROM vue_repas_soir WHERE jour_semaine='Dimanche'").fetchone()[0]
         dimanche = self.c.execute("SELECT portions_prevues FROM planning_repas WHERE jour_repas='Dimanche' AND type_repas='Diner'").fetchone()[0]
         self.assertEqual(dimanche + 3, resultat)
+
+    def test_instructions_formulaire_conservees_apres_generation(self):
+        self.c.execute("UPDATE recette SET instructions = 'Préparer la recette ' || id_recette")
+        self.c.commit()
+        for semaine in ("2026-10-12", "2026-10-19"):
+            self.appliquer(semaine)
+            lignes = self.c.execute("SELECT id_recette, intructions_recette FROM vue_repas_soir").fetchall()
+            self.assertEqual(7, len(lignes))
+            for ligne in lignes:
+                self.assertEqual(f"Préparer la recette {ligne[0]}", ligne[1])
 
     def test_pas_de_mutation_si_creaneau_manquant(self):
         self.c.execute("DELETE FROM planning_repas WHERE jour_repas='Samedi' AND type_repas='Diner'")
