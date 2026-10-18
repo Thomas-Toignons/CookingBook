@@ -1,7 +1,11 @@
 ﻿ingredient;unite;quantite_necessaire;stock_quantite;quantite_manquante;quantite_conditionnement;nombre_conditionnements;quantite_a_acheter;cout_estime;cout_reel
-Carotte;g;1275.0;488.0;787.0;;;787.0;1.18;1.57
-Curry;g;40.0;0.0;40.0;40.0;1;40.0;1.0;
-Lentilles corail;g;600.0;370.0;230.0;;;230.0;0.83;1.09
-Oignon;g;1050.0;800.0;250.0;;;250.0;0.45;0.38
-Pois chiches égouttés;g;960.0;800.0;160.0;400.0;1;400.0;1.5;0.92
-Riz;g;480.0;280.0;200.0;500.0;1;500.0;1.1;2.11
+Carotte;g;475.0;180.0;295.0;;;295.0;0.44;0.59
+Epinards surgelés;g;300.0;0.0;300.0;1000.0;1;1000.0;2.5;
+Haricots verts surgelés;g;400.0;200.0;200.0;1000.0;1;1000.0;2.6;
+Petits pois surgelés;g;600.0;370.0;230.0;1000.0;1;1000.0;2.2;1.81
+Pois chiches égouttés;g;960.0;0.0;960.0;400.0;3;1200.0;4.5;2.76
+Pomme;g;1050.0;300.0;750.0;150.0;5;750.0;1.6;2.99
+Poulet;g;460.0;0.0;460.0;600.0;1;600.0;4.74;7.05
+Skir;g;1750.0;700.0;1050.0;450.0;3;1350.0;6.75;5.67
+Tomates concassées;g;1600.0;1200.0;400.0;1200.0;1;1200.0;2.56;2.39
+Œuf;piece;7.0;4.0;3.0;12.0;1;12.0;3.6;3.12
