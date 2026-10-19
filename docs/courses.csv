@@ -1,10 +1,12 @@
 ﻿ingredient;unite;quantite_necessaire;stock_quantite;quantite_manquante;quantite_conditionnement;nombre_conditionnements;quantite_a_acheter;cout_estime;cout_reel
-Carotte;g;600.0;180.0;420.0;;;420.0;0.63;0.84
-Epinards surgelés;g;450.0;0.0;450.0;1000.0;1;1000.0;2.5;
+Carotte;g;450.0;180.0;270.0;;;270.0;0.41;0.54
+Epinards surgelés;g;300.0;0.0;300.0;1000.0;1;1000.0;2.5;
+Lait de coco;ml;300.0;0.0;300.0;;;300.0;;
+Légumes mélangés surgelés;g;1050.0;700.0;350.0;1000.0;1;1000.0;2.3;2.0
 Petits pois surgelés;g;600.0;370.0;230.0;1000.0;1;1000.0;2.2;1.81
-Pois chiches égouttés;g;1440.0;0.0;1440.0;400.0;4;1600.0;6.0;3.68
+Pois chiches égouttés;g;1800.0;0.0;1800.0;400.0;5;2000.0;7.5;4.6
 Pomme;g;1050.0;300.0;750.0;150.0;5;750.0;1.6;2.99
-Poulet;g;340.0;0.0;340.0;600.0;1;600.0;4.74;7.05
+Poulet;g;670.0;0.0;670.0;600.0;2;1200.0;9.48;14.1
 Skir;g;1750.0;700.0;1050.0;450.0;3;1350.0;6.75;5.67
-Tomates concassées;g;2200.0;1200.0;1000.0;1200.0;1;1200.0;2.56;2.39
+Tomates concassées;g;1800.0;1200.0;600.0;1200.0;1;1200.0;2.56;2.39
 Œuf;piece;7.0;4.0;3.0;12.0;1;12.0;3.6;3.12
