@@ -1,11 +1,12 @@
 ﻿ingredient;unite;quantite_necessaire;stock_quantite;quantite_manquante;quantite_conditionnement;nombre_conditionnements;quantite_a_acheter;cout_estime;cout_reel
-Carotte;g;1150.0;0.0;1150.0;;;1150.0;1.72;2.29
-Fromage blanc nature;g;100.0;30.0;70.0;;;70.0;0.16;0.13
+Carotte;g;600.0;0.0;600.0;;;600.0;0.9;1.19
 Haricots rouges égouttés;g;480.0;0.0;480.0;400.0;2;800.0;3.17;
 Haricots verts surgelés;g;400.0;200.0;200.0;1000.0;1;1000.0;2.6;
 Lentilles vertes;g;440.0;350.0;90.0;1000.0;1;1000.0;3.0;
 Oignon;g;900.0;700.0;200.0;;;200.0;0.36;0.31
+Pois chiches égouttés;g;960.0;800.0;160.0;400.0;1;400.0;1.5;0.92
 Pomme;g;1050.0;300.0;750.0;150.0;5;750.0;1.6;2.99
 Pommes de terre;g;1300.0;600.0;700.0;2000.0;1;2000.0;3.2;
-Poulet;g;480.0;0.0;480.0;600.0;1;600.0;4.74;7.05
+Poulet;g;460.0;0.0;460.0;600.0;1;600.0;4.74;7.05
 Skir;g;1750.0;450.0;1300.0;450.0;3;1350.0;6.75;5.67
+Tomates concassées;g;2400.0;2000.0;400.0;1200.0;1;1200.0;2.56;2.39
