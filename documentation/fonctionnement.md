@@ -46,7 +46,7 @@ Les présences, portions, commentaires et petits-déjeuners ne sont jamais modif
 
 ## Période du planning
 
-La semaine est identifiée par la date de son lundi, dans le fuseau `Europe/Paris`. La génération automatique est programmée le lundi à 14 h 15.
+La semaine est identifiée par la date de son lundi, dans le fuseau `Europe/Paris`. La génération automatique est programmée le lundi à 7 h.
 
 Les déjeuners/dîners couvrent le lundi soir jusqu'au lundi midi suivant. Par exemple, le planning du 12 octobre se termine par le déjeuner du 19 octobre. Dans LibreOffice, « Lundi / Dejeuner » désigne ce dernier repas ; les autres créneaux gardent leurs jours habituels. Les petits-déjeuners restent gérés séparément selon leurs présences.
 

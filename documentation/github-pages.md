@@ -26,7 +26,7 @@ Sources officielles : [configuration de Pages](https://docs.github.com/en/pages/
 
 | Déclenchement | Résultat |
 | --- | --- |
-| Lundi à 14 h 15, `Europe/Paris` | Génération de la semaine, enregistrement de la base et des exports sur `main`, publication Pages. |
+| Lundi à 7 h, `Europe/Paris` | Génération de la semaine, enregistrement de la base et des exports sur `main`, publication Pages. |
 | Push de `cookBook` ou `cookingBook.odb` sur `main` | Actualisation des courses et du HTML depuis le planning existant, sans nouveau tirage. |
 | Push des règles, scripts, modèle, vues SQL ou du workflow sur `main` | Actualisation du site ; les nouvelles règles prennent effet lors de la prochaine génération. |
 | Premier push déclencheur, sans historique daté | Initialisation du premier menu, puis publication. |

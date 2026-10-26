@@ -64,7 +64,7 @@ git push origin main
 
 Ajouter aussi `cookingBook.odb` au commit si les formulaires ou rapports LibreOffice ont changé.
 
-Le lundi à **14 h 15, heure de Paris**, le workflow génère le menu et pousse la base mise à jour sur `main`, puis publie le site. Il faut donc faire le `git pull` **avant** tes modifications. SQLite étant un fichier binaire, Git ne peut pas fusionner deux modifications concurrentes de la base.
+Le lundi à **7 h, heure de Paris**, le workflow génère le menu et pousse la base mise à jour sur `main`, puis publie le site. Il faut donc faire le `git pull` **avant** tes modifications. SQLite étant un fichier binaire, Git ne peut pas fusionner deux modifications concurrentes de la base.
 
 Le premier push qui déclenche le workflow initialise le menu si aucun menu daté n'existe. Après initialisation, les pushes publient le planning courant ; seul le traitement du lundi génère la nouvelle semaine. Les changements de règles s'appliquent à la prochaine génération.
 
