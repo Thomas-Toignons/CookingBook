@@ -38,7 +38,11 @@ Les exécutions partagent une file et récupèrent le dernier état de `main` au
 
 ## Sélection des recettes
 
-Les recettes sont réparties selon les valeurs exactes `Végétarien` et `Non végétarien`. Une catégorie manquante ou différente ne participe pas au tirage. Les recettes affectées aux petits-déjeuners sont exclues des candidates, indépendamment des présences. Les recettes inactives sont exclues lorsque la règle correspondante est activée.
+Le champ `recette.categorie_repas` accepte uniquement `Petit-Dej` et `Dejeuner/Diner` et ne peut pas être vide. Le tirage et la validation des menus enregistrés exigent la catégorie `Dejeuner/Diner`, indépendamment des affectations au planning. Ce filtre reste obligatoire même si les recettes inactives sont autorisées.
+
+Les recettes admissibles sont ensuite réparties selon les valeurs exactes de `type_alimentaire` : `Végétarien` et `Non végétarien`. Un type manquant ou différent ne participe pas au tirage. Les recettes inactives sont exclues lorsque la règle correspondante est activée.
+
+Lors de la migration d'une ancienne base, les recettes déjà affectées à un petit-déjeuner reçoivent `Petit-Dej`, les autres `Dejeuner/Diner`. Cette classification n'est effectuée qu'une seule fois : les catégories modifiées manuellement sont ensuite conservées. Les nouvelles recettes ont par défaut `Dejeuner/Diner` ; choisir `Petit-Dej` pour tout nouveau petit-déjeuner. La migration s'effectue dans la transaction de génération ou de publication.
 
 Avec les règles initiales, cinq recettes végétariennes et deux non végétariennes sont tirées sans remise puis mélangées. Une recette peut revenir la semaine suivante. Si le planning complet est identique à celui de la semaine précédente, deux jours différents sont échangés. Lorsque les règles autorisent les répétitions et qu'une seule recette est admissible, un changement de planning n'est pas forcément possible.
 

@@ -11,6 +11,18 @@ RACINE = Path(__file__).resolve().parents[1]
 JOURS = ("Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche")
 
 
+def preparer_categories(connexion):
+    """Classer une seule fois les recettes d'une ancienne base."""
+    colonnes = {r[1] for r in connexion.execute("PRAGMA table_info(recette)")}
+    if "categorie_repas" not in colonnes:
+        connexion.execute("""ALTER TABLE recette ADD COLUMN categorie_repas TEXT
+            NOT NULL DEFAULT 'Dejeuner/Diner'
+            CHECK(categorie_repas IN ('Petit-Dej', 'Dejeuner/Diner'))""")
+        connexion.execute("""UPDATE recette SET categorie_repas = 'Petit-Dej'
+            WHERE id_recette IN (SELECT id_recette FROM planning_repas
+                                WHERE type_repas = 'Petit-dejeuner')""")
+
+
 def lundi_de(semaine=None):
     jour = date.fromisoformat(semaine) if semaine else datetime.now(ZoneInfo("Europe/Paris")).date()
     return jour - timedelta(days=jour.weekday())

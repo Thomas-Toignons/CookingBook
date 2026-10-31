@@ -4,11 +4,12 @@ import json
 import sqlite3
 from datetime import datetime, timedelta, timezone
 
-from commun import JOURS, RACINE
+from commun import JOURS, RACINE, preparer_categories
 from generer_menu import generer_menu, valider_diners
 
 
 def preparer_schema(connexion):
+    preparer_categories(connexion)
     connexion.execute("""CREATE TABLE IF NOT EXISTS menu_semaine (
         semaine TEXT PRIMARY KEY,
         diners_json TEXT NOT NULL,

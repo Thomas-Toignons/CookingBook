@@ -94,6 +94,14 @@ python3 scripts/exporter_courses.py --base cookBook --sortie courses.csv
 
 Pour restaurer une sauvegarde, fermer LibreOffice et tout autre accès à la base, conserver une copie de la base actuelle, puis remplacer `cookBook` par la sauvegarde choisie. L'historique est restauré avec la base ; relancer `publier` pour reconstruire les exports.
 
+## Catégories de repas
+
+Dans LibreOffice, ouvrir « Fiche recette » et choisir « Catégorie du repas » : `Petit-Dej` pour un petit-déjeuner, `Dejeuner/Diner` pour un plat du midi ou du soir. Cette catégorie est indépendante du type alimentaire (végétarien ou non). Les nouvelles recettes prennent par défaut `Dejeuner/Diner` : penser à modifier ce choix pour les petits-déjeuners.
+
+Le générateur choisit uniquement des recettes `Dejeuner/Diner`. Un petit-déjeuner est exclu même s'il n'a jamais été ajouté au planning. Les petits-déjeuners restent planifiés manuellement.
+
+Pour une ancienne copie de la base, fermer LibreOffice et lancer `python3 scripts/principal.py publier` avant la prévisualisation : cela ajoute les catégories sans refaire le tirage. Les recettes déjà utilisées au petit-déjeuner sont classées `Petit-Dej`, les autres `Dejeuner/Diner`. Si une recette d'un menu enregistré est ensuite reclassée `Petit-Dej`, une génération de ce menu est refusée ; utiliser `--nouveau-tirage` pour le remplacer.
+
 ## Renseigner les conditionnements
 
 Dans LibreOffice, ouvrir « Ingredients » et saisir « Conditionnement (g / ml / pièces) » dans l'unité de référence de l'ingrédient. Laisser vide pour acheter exactement la quantité manquante. Pour des tomates vendues uniquement par lot de 1200 g, saisir 1200 ; pour une boîte achetable seule de 400 g, saisir 400. Pour des œufs vendus par six, saisir 6 avec l'unité piece.

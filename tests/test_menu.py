@@ -12,8 +12,8 @@ from pathlib import Path
 RACINE = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(RACINE / "scripts"))
 from appliquer_menu import appliquer_menu, preparer_schema
-from commun import JOURS, lire_regles, ouvrir_base
-from generer_menu import generer_menu
+from commun import JOURS, lire_regles, ouvrir_base, preparer_categories
+from generer_menu import generer_menu, valider_diners
 from principal import executer
 
 
@@ -30,6 +30,7 @@ class MenuTest(unittest.TestCase):
                 (i, f"Recette {i}", "Végétarien" if i <= 8 else "Non végétarien", int(i != 12))
                 for i in range(1, 13)
             ])
+            cible.execute("UPDATE recette SET categorie_repas='Petit-Dej' WHERE id_recette=1")
             cible.execute("INSERT INTO ingredient VALUES (1, 'Riz', 'g', 50, 1000, 2, 3, NULL)")
             cible.executemany("INSERT INTO recette_ingredient VALUES (?, ?, 1, 200, NULL)",
                              [(i, i) for i in range(1, 13)])
@@ -100,6 +101,47 @@ class MenuTest(unittest.TestCase):
         self.c.execute("UPDATE planning_repas SET present=0, portions_prevues=13")
         b = generer_menu(self.c, self.regles, rng=random.Random(3))
         self.assertEqual(a, b)
+
+    def test_categories_independantes_du_planning(self):
+        # Un petit-déjeuner jamais planifié doit aussi être exclu du tirage.
+        self.c.execute("UPDATE recette SET categorie_repas='Petit-Dej' WHERE id_recette IN (2, 9)")
+        self.c.execute("UPDATE planning_repas SET id_recette=NULL WHERE type_repas='Petit-dejeuner'")
+        for graine in range(20):
+            diners = generer_menu(self.c, self.regles, rng=random.Random(graine))
+            self.assertTrue(set(diners).isdisjoint({1, 2, 9}))
+        with self.assertRaisesRegex(ValueError, "inadmissible"):
+            valider_diners(self.c, [2, 3, 4, 5, 6, 10, 11], self.regles)
+        # La catégorie explicite prévaut sur une affectation manuelle au petit-déjeuner.
+        self.c.execute("UPDATE planning_repas SET id_recette=3 WHERE type_repas='Petit-dejeuner'")
+        valider_diners(self.c, [3, 4, 5, 6, 7, 10, 11], self.regles)
+        self.regles['selection']['recettes_actives_uniquement'] = False
+        self.assertTrue(set(generer_menu(self.c, self.regles)).isdisjoint({1, 2, 9}))
+
+    def test_migration_categories_unique_et_transactionnelle(self):
+        self.c.execute('ALTER TABLE recette DROP COLUMN categorie_repas')
+        self.c.commit()
+        self.c.execute('BEGIN IMMEDIATE')
+        preparer_categories(self.c)
+        self.c.rollback()
+        self.assertNotIn('categorie_repas', {r[1] for r in self.c.execute('PRAGMA table_info(recette)')})
+        with self.c:
+            self.c.execute('BEGIN IMMEDIATE')
+            preparer_schema(self.c)
+        self.assertEqual('Petit-Dej', self.c.execute('SELECT categorie_repas FROM recette WHERE id_recette=1').fetchone()[0])
+        self.assertEqual(11, self.c.execute("SELECT COUNT(*) FROM recette WHERE categorie_repas='Dejeuner/Diner'").fetchone()[0])
+        self.c.execute("UPDATE recette SET categorie_repas='Petit-Dej' WHERE id_recette=2")
+        preparer_categories(self.c)
+        self.assertEqual('Petit-Dej', self.c.execute('SELECT categorie_repas FROM recette WHERE id_recette=2').fetchone()[0])
+        for valeur in (None, '', 'Autre'):
+            with self.assertRaises(sqlite3.IntegrityError):
+                self.c.execute('UPDATE recette SET categorie_repas=? WHERE id_recette=3', (valeur,))
+
+    def test_menu_archive_refuse_recette_reclassee(self):
+        self.appliquer()
+        self.c.execute("UPDATE recette SET categorie_repas='Petit-Dej' WHERE id_recette=?", (self.diners()[0],))
+        self.c.commit()
+        with self.assertRaisesRegex(ValueError, 'inadmissible'):
+            self.appliquer()
 
     def test_continuite_et_relance(self):
         self.appliquer()

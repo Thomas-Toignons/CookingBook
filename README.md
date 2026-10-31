@@ -4,6 +4,8 @@ Recettes et planning dans SQLite, génération hebdomadaire en Python, liste de 
 
 Le menu contient **sept dîners distincts : cinq végétariens et deux non végétariens**. Le dîner est repris au déjeuner du lendemain. Le planning des déjeuners/dîners va du lundi soir au lundi midi suivant ; le champ « Lundi / Dejeuner » désigne ce dernier repas. Le tirage ignore les présences ; elles restent renseignées manuellement et sont prises en compte uniquement par la vue des courses.
 
+Chaque recette possède une catégorie de repas : **Petit-Dej** ou **Dejeuner/Diner**, à renseigner dans la fiche recette LibreOffice. Le générateur sélectionne uniquement les recettes **Dejeuner/Diner**, même si d'autres petits-déjeuners ne sont pas encore utilisés dans le planning.
+
 ## Contraintes pour créer de nouvelles recettes
 
 Les recettes sont destinées à un étudiant avec **un petit budget et une petite cuisine**. Le matériel disponible est limité à **deux plaques de cuisson, une casserole et une poêle**. Les recettes doivent pouvoir être réalisées avec ce matériel, sans nécessiter de four, de robot ou d'équipement supplémentaire.

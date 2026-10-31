@@ -12,12 +12,10 @@ def valider_diners(connexion, diners, regles):
     if regles["menu"]["recettes_distinctes"] and len(set(diners)) != 7:
         raise ValueError("Les sept dîners doivent être distincts.")
     recettes = {r["id_recette"]: r for r in connexion.execute("SELECT * FROM recette")}
-    petits_dejeuners = {r[0] for r in connexion.execute(
-        "SELECT id_recette FROM planning_repas WHERE type_repas = 'Petit-dejeuner'")}
     non_vege = 0
     for identifiant in diners:
         recette = recettes.get(identifiant)
-        if recette is None or identifiant in petits_dejeuners:
+        if recette is None or recette["categorie_repas"] != "Dejeuner/Diner":
             raise ValueError(f"Recette de dîner inadmissible : {identifiant}.")
         if regles["selection"]["recettes_actives_uniquement"] and not recette["actif"]:
             raise ValueError(f"Recette désactivée : {recette['nom']}.")
@@ -33,10 +31,7 @@ def generer_menu(connexion, regles, precedent=None, rng=None):
     recettes = list(connexion.execute("""
         SELECT id_recette, type_alimentaire FROM recette
         WHERE (? = 0 OR actif = 1)
-          AND id_recette NOT IN (
-            SELECT id_recette FROM planning_repas
-            WHERE type_repas = 'Petit-dejeuner' AND id_recette IS NOT NULL
-          )
+          AND categorie_repas = 'Dejeuner/Diner'
         ORDER BY id_recette
     """, (regles["selection"]["recettes_actives_uniquement"],)))
     groupes = {

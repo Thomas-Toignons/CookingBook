@@ -3,6 +3,8 @@ CREATE TABLE recette (
     id_recette INTEGER PRIMARY KEY,
     nom TEXT NOT NULL,
     type_alimentaire TEXT,
+    categorie_repas TEXT NOT NULL DEFAULT 'Dejeuner/Diner'
+        CHECK(categorie_repas IN ('Petit-Dej', 'Dejeuner/Diner')),
     portions_reference REAL NOT NULL CHECK(portions_reference > 0),
     actif INTEGER NOT NULL CHECK(actif IN (0,1)),
     instructions TEXT NOT NULL DEFAULT ''
