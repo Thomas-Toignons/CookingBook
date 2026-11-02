@@ -26,6 +26,15 @@ def preparer_schema(connexion):
         connexion.execute("""ALTER TABLE ingredient ADD COLUMN quantite_conditionnement REAL
             CHECK(quantite_conditionnement IS NULL OR
                 (typeof(quantite_conditionnement) IN ('integer','real') AND quantite_conditionnement > 0))""")
+    if "est_viande" not in colonnes:
+        connexion.execute("""ALTER TABLE ingredient ADD COLUMN est_viande INTEGER
+            NOT NULL DEFAULT 0 CHECK(est_viande IN (0, 1))""")
+        connexion.execute("UPDATE ingredient SET est_viande=1 WHERE nom IN ('Poulet', 'Bœuf haché')")
+    if "est_poisson" not in colonnes:
+        connexion.execute("""ALTER TABLE ingredient ADD COLUMN est_poisson INTEGER
+            NOT NULL DEFAULT 0 CHECK(est_poisson IN (0, 1))""")
+        connexion.execute("""UPDATE ingredient SET est_poisson=1
+            WHERE nom IN ('Thon au naturel égoutté', 'Filet de poisson blanc')""")
     colonnes = {r[1] for r in connexion.execute("PRAGMA table_info(menu_semaine)")}
     if "periode" not in colonnes:
         connexion.execute("ALTER TABLE menu_semaine ADD COLUMN periode TEXT NOT NULL DEFAULT 'lundi_courant'")

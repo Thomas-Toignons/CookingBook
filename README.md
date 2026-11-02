@@ -2,7 +2,7 @@
 
 Recettes et planning dans SQLite, génération hebdomadaire en Python, liste de courses consultable sur GitHub Pages.
 
-Le menu contient **sept dîners distincts : cinq végétariens et deux non végétariens**. Le dîner est repris au déjeuner du lendemain. Le planning des déjeuners/dîners va du lundi soir au lundi midi suivant ; le champ « Lundi / Dejeuner » désigne ce dernier repas. Le tirage ignore les présences ; elles restent renseignées manuellement et sont prises en compte uniquement par la vue des courses.
+Le menu contient **sept dîners distincts : deux non végétariens hors poisson, et cinq végétariens ou quatre végétariens plus un poisson facultatif**. Le dîner est repris au déjeuner du lendemain. Le planning va du lundi soir au lundi midi suivant ; « Lundi / Dejeuner » désigne ce dernier repas. Le tirage ignore les présences, portions prévues et stocks : la somme des quantités de référence de chaque viande sélectionnée doit correspondre exactement à **un conditionnement**. Les recettes au poulet contiennent 300 g pour deux portions de référence. Les courses restent calculées selon les présences, portions et stocks réels.
 
 Chaque recette possède une catégorie de repas : **Petit-Dej** ou **Dejeuner/Diner**, à renseigner dans la fiche recette LibreOffice. Le générateur sélectionne uniquement les recettes **Dejeuner/Diner**, même si d'autres petits-déjeuners ne sont pas encore utilisés dans le planning.
 

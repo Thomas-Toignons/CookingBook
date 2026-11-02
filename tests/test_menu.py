@@ -102,6 +102,116 @@ class MenuTest(unittest.TestCase):
         b = generer_menu(self.c, self.regles, rng=random.Random(3))
         self.assertEqual(a, b)
 
+    def preparer_viandes(self):
+        preparer_schema(self.c)
+        self.c.execute("UPDATE planning_repas SET present=1, portions_prevues=1")
+        self.c.executemany("""INSERT INTO ingredient
+            (id_ingredient, nom, unite_reference, stock_quantite, base_tarifaire,
+             quantite_conditionnement, est_viande) VALUES (?, ?, 'g', 0, 1000, ?, 1)""",
+            [(2, 'Poulet', 600), (3, 'Bœuf haché', 500)])
+        self.c.executemany("INSERT INTO recette_ingredient VALUES (?, ?, ?, ?, NULL)",
+                           [(20, 9, 2, 300), (21, 10, 2, 300), (22, 11, 3, 250), (23, 12, 3, 250)])
+        self.c.execute("UPDATE recette SET actif=1 WHERE id_recette=12")
+        self.c.commit()
+
+    def test_viandes_refus_melange_et_tirages_conformes(self):
+        self.preparer_viandes()
+        with self.assertRaisesRegex(ValueError, '300 g prévus.*250 g prévus'):
+            valider_diners(self.c, [2, 3, 4, 5, 6, 9, 11], self.regles)
+        for graine in range(30):
+            diners = generer_menu(self.c, self.regles, rng=random.Random(graine))
+            self.assertIn(set(diners) & {9, 10, 11, 12}, ({9, 10}, {11, 12}))
+            valider_diners(self.c, diners, self.regles)
+
+    def test_viandes_ignore_presences_portions_stocks_et_autres_repas(self):
+        self.preparer_viandes()
+        avant = generer_menu(self.c, self.regles, rng=random.Random(3))
+        self.c.execute("UPDATE planning_repas SET present=0, portions_prevues=13, id_recette=11")
+        self.c.execute("UPDATE ingredient SET stock_quantite=12345")
+        apres = generer_menu(self.c, self.regles, rng=random.Random(3))
+        self.assertEqual(avant, apres)
+        valider_diners(self.c, [2, 3, 4, 5, 6, 9, 10], self.regles)
+        self.regles['menu']['dejeuner_identique_au_diner_precedent'] = False
+        valider_diners(self.c, [2, 3, 4, 5, 6, 9, 10], self.regles)
+        with self.assertRaisesRegex(ValueError, 'conditionnement'):
+            valider_diners(self.c, [2, 3, 4, 5, 6, 9, 11], self.regles)
+
+    def test_viandes_un_seul_conditionnement_pas_plusieurs(self):
+        self.preparer_viandes()
+        self.c.execute('UPDATE recette_ingredient SET quantite_reference=600 WHERE id_ingredient=2')
+        with self.assertRaisesRegex(ValueError, '1200 g prévus pour un lot de 600'):
+            valider_diners(self.c, [2, 3, 4, 5, 6, 9, 10], self.regles)
+
+    def test_viandes_impossible_annule_transaction(self):
+        self.preparer_viandes()
+        self.c.execute('UPDATE ingredient SET quantite_conditionnement=701 WHERE est_viande=1')
+        self.c.commit()
+        avant = list(self.c.execute('SELECT * FROM planning_repas ORDER BY id_planning'))
+        with self.assertRaisesRegex(ValueError, 'Aucun menu possible'):
+            self.appliquer()
+        self.assertEqual(avant, list(self.c.execute('SELECT * FROM planning_repas ORDER BY id_planning')))
+        self.assertEqual(0, self.c.execute('SELECT COUNT(*) FROM menu_semaine').fetchone()[0])
+
+    def test_viandes_conditionnement_obligatoire_et_repetitions(self):
+        self.preparer_viandes()
+        self.c.execute('UPDATE ingredient SET quantite_conditionnement=NULL WHERE id_ingredient=2')
+        with self.assertRaisesRegex(ValueError, 'conditionnement manquant'):
+            valider_diners(self.c, [2, 3, 4, 5, 6, 9, 10], self.regles)
+        self.c.execute('UPDATE ingredient SET quantite_conditionnement=600 WHERE id_ingredient=2')
+        self.c.execute('UPDATE recette SET actif=0 WHERE id_recette IN (10, 11, 12)')
+        self.regles['menu']['recettes_distinctes'] = False
+        diners = generer_menu(self.c, self.regles, rng=random.Random(5))
+        self.assertEqual(2, diners.count(9))
+        valider_diners(self.c, diners, self.regles)
+
+    def preparer_poisson(self):
+        self.preparer_viandes()
+        self.c.execute("""INSERT INTO ingredient (id_ingredient, nom, unite_reference,
+            stock_quantite, base_tarifaire, est_poisson, quantite_conditionnement)
+            VALUES (4, 'Poisson', 'g', 17, 1000, 1, 999)""")
+        self.c.execute("""INSERT INTO recette (id_recette, nom, type_alimentaire, portions_reference, actif)
+            VALUES (13, 'Poisson bonus', 'Non végétarien', 2, 1),
+                   (14, 'Autre poisson', 'Non végétarien', 2, 1)""")
+        self.c.executemany('INSERT INTO recette_ingredient VALUES (?, ?, 4, 200, NULL)', [(30, 13), (31, 14)])
+
+    def test_poisson_bonus_facultatif_sans_remplacer_viande(self):
+        self.preparer_poisson()
+        observes = set()
+        for graine in range(30):
+            diners = generer_menu(self.c, self.regles, rng=random.Random(graine))
+            self.assertIn(set(diners) & {9, 10, 11, 12}, ({9, 10}, {11, 12}))
+            bonus = len(set(diners) & {13, 14})
+            observes.add(bonus)
+            self.assertEqual(7, len(diners))
+            valider_diners(self.c, diners, self.regles)
+        self.assertEqual({0, 1}, observes)
+        with self.assertRaisesRegex(ValueError, 'hors poisson'):
+            valider_diners(self.c, [2, 3, 4, 5, 6, 9, 13], self.regles)
+        with self.assertRaisesRegex(ValueError, 'Un seul dîner de poisson'):
+            valider_diners(self.c, [2, 3, 4, 9, 10, 13, 14], self.regles)
+        self.c.commit()
+        self.appliquer()
+        self.assertEqual(self.diners()[6], self.c.execute("SELECT id_recette FROM planning_repas WHERE jour_repas='Lundi' AND type_repas='Dejeuner'").fetchone()[0])
+
+    def test_poisson_pas_de_bonus_si_inactif_ou_petit_dejeuner(self):
+        self.preparer_poisson()
+        self.c.execute("UPDATE recette SET actif=0 WHERE id_recette=13")
+        self.c.execute("UPDATE recette SET categorie_repas='Petit-Dej' WHERE id_recette=14")
+        self.assertTrue(set(generer_menu(self.c, self.regles)).isdisjoint({13, 14}))
+
+    def test_poisson_bonus_si_quatre_vegetariens_disponibles(self):
+        self.preparer_poisson()
+        self.c.execute('UPDATE recette SET actif=0 WHERE id_recette IN (6, 7, 8)')
+        diners = generer_menu(self.c, self.regles, rng=random.Random(1))
+        self.assertEqual(1, len(set(diners) & {13, 14}))
+        valider_diners(self.c, diners, self.regles)
+
+    def test_viandes_migration_preserve_classement_manuel(self):
+        self.c.execute('ALTER TABLE ingredient ADD COLUMN est_viande INTEGER NOT NULL DEFAULT 0')
+        self.c.execute("UPDATE ingredient SET est_viande=1 WHERE id_ingredient=1")
+        preparer_schema(self.c)
+        self.assertEqual(1, self.c.execute('SELECT est_viande FROM ingredient').fetchone()[0])
+
     def test_categories_independantes_du_planning(self):
         # Un petit-déjeuner jamais planifié doit aussi être exclu du tirage.
         self.c.execute("UPDATE recette SET categorie_repas='Petit-Dej' WHERE id_recette IN (2, 9)")

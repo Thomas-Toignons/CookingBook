@@ -46,7 +46,7 @@ Lors de la migration d'une ancienne base, les recettes déjà affectées à un p
 
 Avec les règles initiales, cinq recettes végétariennes et deux non végétariennes sont tirées sans remise puis mélangées. Une recette peut revenir la semaine suivante. Si le planning complet est identique à celui de la semaine précédente, deux jours différents sont échangés. Lorsque les règles autorisent les répétitions et qu'une seule recette est admissible, un changement de planning n'est pas forcément possible.
 
-Les présences, portions, commentaires et petits-déjeuners ne sont jamais modifiés par la génération. Les quatorze créneaux déjeuner/dîner doivent déjà exister ; un créneau manquant provoque une erreur, sans création implicite de présence.
+Les présences, portions, commentaires et petits-déjeuners ne sont jamais modifiés par la génération. Le tirage ignore les présences, portions prévues et stocks ; ceux-ci servent uniquement au calcul des préparations et des courses. Les quatorze créneaux déjeuner/dîner doivent déjà exister ; un créneau manquant provoque une erreur, sans création implicite de présence.
 
 ## Période du planning
 
@@ -67,6 +67,20 @@ Lorsque `dejeuner_identique_au_diner_precedent` est activé, mardi midi reprend 
 Exemple : besoin de 1600 g, stock de 800 g, lot de 1200 g → manque de 800 g, achat de 1200 g. Un stock suffisant ne déclenche aucun achat. Les coûts sont calculés sur la quantité achetée avec les tarifs existants (`quantite_a_acheter / base_tarifaire * prix`). Les tarifs doivent donc correspondre à cette base tarifaire, et non forcément au prix d'un paquet. Les prix manquants donnent NULL et le site signale les totaux incomplets.
 
 Le formulaire « Ingredients » permet de saisir le conditionnement. Le CSV conserve les quantités nécessaires, le stock, le manque, le conditionnement, le nombre de lots et la quantité à acheter. Le site affiche les lots et le manque après stock. Les achats et les surplus ne modifient jamais automatiquement le stock.
+
+### Quantité prévue de viande et poisson facultatif
+
+`ingredient.est_viande = 1` identifie les viandes soumises à la contrainte. La migration classe le poulet et le bœuf haché existants ; les nouveaux ingrédients de viande doivent être marqués explicitement. Le poulet des recettes de la base est fixé à 300 g pour deux portions de référence.
+
+Pour chaque viande sélectionnée, le tirage additionne `recette_ingredient.quantite_reference` des recettes des sept dîners : le total doit être égal à `quantite_conditionnement`, exactement un lot. Les recettes de référence couvrent déjà le dîner et le déjeuner suivant : le déjeuner n'est pas recompté. Ni les présences, ni les portions du planning, ni les stocks, ni les repas manuels ne modifient cette vérification. Une viande absente du menu n'a aucune contrainte de stock à épuiser.
+
+Deux recettes de poulet à 300 g correspondent au lot de 600 g ; deux recettes de bœuf à 250 g correspondent au lot de 500 g. Une recette de chaque est refusée, même si le stock existant pourrait compléter les achats. Plusieurs lots d'une même viande ne satisfont pas la règle.
+
+`ingredient.est_poisson = 1` identifie les poissons ; la migration classe le thon et le filet de poisson blanc existants. Un dîner de poisson facultatif peut remplacer un dîner végétarien et s'ajouter aux deux dîners non végétariens du quota principal : la semaine compte alors quatre végétariens, deux viandes et un poisson. Le tirage choisit entre zéro et un poisson lorsque les recettes disponibles le permettent. Le poisson n'est pas soumis à la contrainte de conditionnement de la viande. Une recette mêlant viande et poisson reste dans le quota principal et ses viandes sont contrôlées.
+
+Le tirage recherche une combinaison compatible. Si aucune n'existe, il échoue explicitement et la transaction est annulée. Un menu archivé est aussi vérifié lors de son application ; utiliser `generer --nouveau-tirage` s'il est devenu incompatible. Une publication conserve le planning manuel.
+
+La liste de courses continue de suivre les présences, les portions et les stocks, puis arrondit les achats aux lots. Elle peut donc afficher un surplus réel après achat lorsqu'un repas prévu est absent : la contrainte du tirage porte uniquement sur les recettes prévues.
 
 La migration du schéma et des vues est transactionnelle et fonctionne en génération comme en publication. Après la première migration, publier conserve les recettes et les présences manuelles.
 

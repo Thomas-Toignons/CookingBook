@@ -108,9 +108,9 @@
       21,
       24,
       3,
-      30
+      7
     ],
-    "lundi_midi": 30,
+    "lundi_midi": 7,
     "periode": "lundi_suivant",
     "regles": {
       "menu": {
@@ -122,6 +122,6 @@
         "recettes_actives_uniquement": true
       }
     },
-    "genere_le": "2026-11-02T14:31:54.067406+00:00"
+    "genere_le": "2026-11-02T18:23:32.900712+00:00"
   }
 ]

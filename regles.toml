@@ -1,4 +1,7 @@
-# Sept dîners, du lundi au dimanche. Les présences ne guident jamais le tirage.
+# Sept dîners, du lundi au dimanche, indépendamment des présences et du stock.
+# Chaque viande prévue correspond exactement à un conditionnement.
+# Le quota non végétarien exclut le poisson : un dîner de poisson facultatif
+# peut remplacer un dîner végétarien en supplément du quota principal.
 [menu]
 nombre_non_vegetariens = 2
 recettes_distinctes = true
