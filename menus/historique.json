@@ -123,5 +123,30 @@
       }
     },
     "genere_le": "2026-11-02T18:23:32.900712+00:00"
+  },
+  {
+    "semaine": "2026-11-09",
+    "diners": [
+      19,
+      21,
+      12,
+      6,
+      9,
+      25,
+      7
+    ],
+    "lundi_midi": 7,
+    "periode": "lundi_suivant",
+    "regles": {
+      "menu": {
+        "nombre_non_vegetariens": 2,
+        "recettes_distinctes": true,
+        "dejeuner_identique_au_diner_precedent": true
+      },
+      "selection": {
+        "recettes_actives_uniquement": true
+      }
+    },
+    "genere_le": "2026-11-11T10:06:20.235914+00:00"
   }
 ]

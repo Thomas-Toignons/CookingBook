@@ -37,41 +37,38 @@
     @media print { body { background:white; font-size:12px; } main { max-width:none; padding:0; } nav,.actions,footer { display:none; } h1 { font-size:28px; } .jour,.courses li { break-inside:avoid; } .grille { grid-template-columns:repeat(3,1fr); } }
   </style>
 </head>
-<body data-semaine="2026-11-02">
+<body data-semaine="2026-11-09">
 <main>
   <header>
     <div class="signature">CookingBook · À table cette semaine</div>
     <h1>Le menu est prêt.<br>Place aux courses.</h1>
-    <p>Du 02/11/2026 au 09/11/2026 · lundi soir au lundi midi suivant</p>
-    <p class="secondaire">Mise à jour le 02/11/2026 à 19:43 · Les courses suivent les présences et le stock renseignés.</p>
+    <p>Du 09/11/2026 au 16/11/2026 · lundi soir au lundi midi suivant</p>
+    <p class="secondaire">Mise à jour le 11/11/2026 à 11:10 · Les courses suivent les présences et le stock renseignés.</p>
     <nav aria-label="Navigation"><a href="#courses">Liste de courses</a><a href="#menu">Menu de la semaine</a></nav>
   </header>
   <section id="courses" aria-labelledby="titre-courses">
-    <div class="entete"><h2 id="titre-courses">Dans le panier</h2><span id="progression" aria-live="polite">8 ingrédients</span></div>
+    <div class="entete"><h2 id="titre-courses">Dans le panier</h2><span id="progression" aria-live="polite">5 ingrédients</span></div>
     <p class="secondaire">Coche les achats au fur et à mesure. Les coches restent sur cet appareil, pour cette semaine.</p>
-    <ul class="courses"><li><label for="achat-0"><input id="achat-0" type="checkbox" data-ingredient="Carotte"><span class="ingredient">Carotte</span><span class="quantite">750 g</span></label></li>
-<li><label for="achat-1"><input id="achat-1" type="checkbox" data-ingredient="Flocons d’avoine"><span class="ingredient">Flocons d’avoine<small class="secondaire">1 lot(s) de 175 g · besoin après stock : 170 g</small></span><span class="quantite">175 g</span></label></li>
-<li><label for="achat-2"><input id="achat-2" type="checkbox" data-ingredient="Fromage blanc nature"><span class="ingredient">Fromage blanc nature<small class="secondaire">1 lot(s) de 800 g · besoin après stock : 150 g</small></span><span class="quantite">800 g</span></label></li>
-<li><label for="achat-3"><input id="achat-3" type="checkbox" data-ingredient="Pain complet"><span class="ingredient">Pain complet<small class="secondaire">1 lot(s) de 500 g · besoin après stock : 150 g</small></span><span class="quantite">500 g</span></label></li>
-<li><label for="achat-4"><input id="achat-4" type="checkbox" data-ingredient="Pomme"><span class="ingredient">Pomme<small class="secondaire">3 lot(s) de 150 g · besoin après stock : 450 g</small></span><span class="quantite">450 g</span></label></li>
-<li><label for="achat-5"><input id="achat-5" type="checkbox" data-ingredient="Semoule"><span class="ingredient">Semoule<small class="secondaire">1 lot(s) de 1000 g · besoin après stock : 10 g</small></span><span class="quantite">1000 g</span></label></li>
-<li><label for="achat-6"><input id="achat-6" type="checkbox" data-ingredient="Skyr"><span class="ingredient">Skyr<small class="secondaire">2 lot(s) de 450 g · besoin après stock : 800 g</small></span><span class="quantite">900 g</span></label></li>
-<li><label for="achat-7"><input id="achat-7" type="checkbox" data-ingredient="Œuf"><span class="ingredient">Œuf<small class="secondaire">1 lot(s) de 12 piece · besoin après stock : 1 piece</small></span><span class="quantite">12 piece</span></label></li></ul>
-    <div class="budget"><span>Coût estimé : <strong>14,76 €</strong></span><span>Selon les prix magasin renseignés : <strong>14,36 €</strong></span></div>
-    <p class="secondaire">Estimation incomplète : 1 tarif(s) manquant(s). Total magasin incomplet : 1 tarif(s) manquant(s). Les totaux portent sur les quantités à acheter, conditionnements compris.</p>
+    <ul class="courses"><li><label for="achat-0"><input id="achat-0" type="checkbox" data-ingredient="Carotte"><span class="ingredient">Carotte</span><span class="quantite">375 g</span></label></li>
+<li><label for="achat-1"><input id="achat-1" type="checkbox" data-ingredient="Légumes mélangés surgelés"><span class="ingredient">Légumes mélangés surgelés<small class="secondaire">1 lot(s) de 1000 g · besoin après stock : 400 g</small></span><span class="quantite">1000 g</span></label></li>
+<li><label for="achat-2"><input id="achat-2" type="checkbox" data-ingredient="Pomme"><span class="ingredient">Pomme<small class="secondaire">1 lot(s) de 150 g · besoin après stock : 150 g</small></span><span class="quantite">150 g</span></label></li>
+<li><label for="achat-3"><input id="achat-3" type="checkbox" data-ingredient="Riz"><span class="ingredient">Riz<small class="secondaire">1 lot(s) de 500 g · besoin après stock : 170 g</small></span><span class="quantite">500 g</span></label></li>
+<li><label for="achat-4"><input id="achat-4" type="checkbox" data-ingredient="Skyr"><span class="ingredient">Skyr<small class="secondaire">1 lot(s) de 450 g · besoin après stock : 50 g</small></span><span class="quantite">450 g</span></label></li></ul>
+    <div class="budget"><span>Coût estimé : <strong>6,53 €</strong></span><span>Selon les prix magasin renseignés : <strong>7,35 €</strong></span></div>
+    <p class="secondaire">Tous les achats ont un tarif renseigné. Les totaux portent sur les quantités à acheter, conditionnements compris.</p>
     <div class="actions"><a href="courses.csv" download>Télécharger le CSV</a><button id="imprimer" type="button">Imprimer</button><button id="reinitialiser" type="button">Décocher les achats</button></div>
   </section>
   <section id="menu" aria-labelledby="titre-menu">
     <h2 id="titre-menu">Cette semaine à table</h2>
     <p class="secondaire">Le dîner devient le déjeuner du lendemain. Le dernier lundi midi reprend le dimanche de ce planning.</p>
-    <div class="grille"><article class="jour"><h3>Lundi <small>02/11</small></h3><div class="repas"><span class="label">Dîner</span><p>Bolognaise de lentilles &amp; pâtes</p></div></article>
-<article class="jour"><h3>Mardi <small>03/11</small></h3><div class="repas"><span class="label">Déjeuner</span><p>Bolognaise de lentilles &amp; pâtes</p></div><div class="repas"><span class="label">Dîner</span><p>Dhal lentilles corail, carottes &amp; riz</p></div></article>
-<article class="jour"><h3>Mercredi <small>04/11</small></h3><div class="repas"><span class="label">Déjeuner</span><p>Dhal lentilles corail, carottes &amp; riz</p></div><div class="repas"><span class="label">Dîner</span><p>Chakchouka aux pois chiches, œufs et pain</p></div></article>
-<article class="jour"><h3>Jeudi <small>05/11</small></h3><div class="repas"><span class="label">Déjeuner</span><p>Chakchouka aux pois chiches, œufs et pain</p></div><div class="repas"><span class="label">Dîner</span><p>Lentilles à la moutarde, carottes et semoule</p></div></article>
-<article class="jour"><h3>Vendredi <small>06/11</small></h3><div class="repas"><span class="label">Déjeuner</span><p>Lentilles à la moutarde, carottes et semoule</p></div><div class="repas"><span class="label">Dîner</span><p>Semoule aux lentilles corail et épinards</p></div></article>
-<article class="jour"><h3>Samedi <small>07/11</small></h3><div class="repas"><span class="label">Déjeuner</span><p>Semoule aux lentilles corail et épinards</p></div><div class="repas"><span class="label">Dîner</span><p>Poulet curry, carottes &amp; riz</p><span class="badge">Non végétarien</span><span class="absent">Absent · hors courses</span></div></article>
-<article class="jour"><h3>Dimanche <small>08/11</small></h3><div class="repas"><span class="label">Déjeuner</span><p>Poulet curry, carottes &amp; riz</p><span class="badge">Non végétarien</span><span class="absent">Absent · hors courses</span></div><div class="repas"><span class="label">Dîner</span><p>Poulet, pommes de terre &amp; haricots verts</p><span class="badge">Non végétarien</span><span class="absent">Absent · hors courses</span></div></article>
-<article class="jour"><h3>Lundi <small>09/11</small></h3><div class="repas"><span class="label">Déjeuner · restes du dimanche</span><p>Poulet, pommes de terre &amp; haricots verts</p><span class="badge">Non végétarien</span><span class="absent">Absent · hors courses</span></div></article></div>
+    <div class="grille"><article class="jour"><h3>Lundi <small>09/11</small></h3><div class="repas"><span class="label">Dîner</span><p>Pâtes crémeuses aux épinards et petits pois</p><span class="absent">Absent · hors courses</span></div></article>
+<article class="jour"><h3>Mardi <small>10/11</small></h3><div class="repas"><span class="label">Déjeuner</span><p>Pâtes crémeuses aux épinards et petits pois</p><span class="absent">Absent · hors courses</span></div><div class="repas"><span class="label">Dîner</span><p>Lentilles à la moutarde, carottes et semoule</p><span class="absent">Absent · hors courses</span></div></article>
+<article class="jour"><h3>Mercredi <small>11/11</small></h3><div class="repas"><span class="label">Déjeuner</span><p>Lentilles à la moutarde, carottes et semoule</p><span class="absent">Absent · hors courses</span></div><div class="repas"><span class="label">Dîner</span><p>Riz lentilles corail, petits pois &amp; carottes</p></div></article>
+<article class="jour"><h3>Jeudi <small>12/11</small></h3><div class="repas"><span class="label">Déjeuner</span><p>Riz lentilles corail, petits pois &amp; carottes</p></div><div class="repas"><span class="label">Dîner</span><p>Semoule, pois chiches &amp; légumes</p></div></article>
+<article class="jour"><h3>Vendredi <small>13/11</small></h3><div class="repas"><span class="label">Déjeuner</span><p>Semoule, pois chiches &amp; légumes</p></div><div class="repas"><span class="label">Dîner</span><p>Riz au poulet, tomate &amp; petits pois</p><span class="badge">Non végétarien</span><span class="absent">Absent · hors courses</span></div></article>
+<article class="jour"><h3>Samedi <small>14/11</small></h3><div class="repas"><span class="label">Déjeuner</span><p>Riz au poulet, tomate &amp; petits pois</p><span class="badge">Non végétarien</span><span class="absent">Absent · hors courses</span></div><div class="repas"><span class="label">Dîner</span><p>Riz aux haricots rouges, carottes et cumin</p><span class="absent">Absent · hors courses</span></div></article>
+<article class="jour"><h3>Dimanche <small>15/11</small></h3><div class="repas"><span class="label">Déjeuner</span><p>Riz aux haricots rouges, carottes et cumin</p><span class="absent">Absent · hors courses</span></div><div class="repas"><span class="label">Dîner</span><p>Poulet, pommes de terre &amp; haricots verts</p><span class="badge">Non végétarien</span><span class="absent">Absent · hors courses</span></div></article>
+<article class="jour"><h3>Lundi <small>16/11</small></h3><div class="repas"><span class="label">Déjeuner · restes du dimanche</span><p>Poulet, pommes de terre &amp; haricots verts</p><span class="badge">Non végétarien</span><span class="absent">Absent · hors courses</span></div></article></div>
   </section>
   <footer class="secondaire">CookingBook · Une liste commune, des coches propres à chaque appareil.</footer>
 </main>
